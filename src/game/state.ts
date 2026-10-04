@@ -80,8 +80,6 @@ export interface Hero {
   afterburn: number;
   /** hits landed, for every-Nth-hit rules */
   hits: number;
-  /** seconds since the hero was last hurt */
-  calm: number;
   /** the gun drop under the hero, if any */
   near: number | null;
   /** the aim the UI shows: last aim stick state, for the renderer */

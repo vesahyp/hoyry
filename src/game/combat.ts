@@ -267,10 +267,10 @@ export function killEnemy(s: SimState, e: Enemy, owner: number): void {
   const h = owner >= 0 ? s.heroes[owner] : undefined;
   const luck = s.heroes.reduce((m, x) => Math.max(m, x.stats.luck), 0);
   const coinMul = s.heroes.reduce((m, x) => Math.max(m, x.stats.coinMul), 1);
-  // Coins every time, steam sometimes, guns from the ones that carried one.
+  // Coins every time, steam sometimes (more from floor 6, where nothing heals by itself), guns from the ones that carried one.
   const coins = Math.max(1, Math.round((e.boss ? 40 : e.elite.length ? 8 : ENEMIES[e.kind]?.points ?? 1) * coinMul));
   for (let i = 0; i < Math.min(coins, 8); i++) dropAt(s, e.x, e.y, 'coin', Math.ceil(coins / Math.min(coins, 8)));
-  if (s.rng.chance(e.boss ? 1 : e.elite.length ? 0.6 : 0.06)) dropAt(s, e.x, e.y, 'steam', e.boss ? 40 : 14);
+  if (s.rng.chance(e.boss ? 1 : e.elite.length ? 0.6 : s.floor >= 6 ? 0.4 : 0.06)) dropAt(s, e.x, e.y, 'steam', e.boss ? 40 : s.floor >= 6 ? 30 : 14);
   if (e.boss) {
     s.run.bosses++;
     dropGun(s, e.x, e.y, rollRarity(s.rng, s.floor, luck, 3));

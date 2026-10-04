@@ -58,7 +58,6 @@ export function newRun(seed: number, defs: HeroDef[]): SimState {
       valveUsed: false,
       afterburn: 0,
       hits: 0,
-      calm: 0,
       near: null,
       aimShow: { x: 0, y: 0, on: false, superOn: false, sx: 0, sy: 0 },
     };
@@ -278,10 +277,6 @@ function updateHero(s: SimState, h: Hero, inp: HeroInput, dt: number): void {
 
   // Hidden in the weeds until you fire.
   h.hidden = tileAt(s.arena, h.x, h.y) === BUSH && h.sinceFire > 1;
-
-  // Brawl-style recovery: out of the fight for a while, health comes back.
-  h.calm = h.hurtFlash > 0.15 ? 0 : h.calm + dt;
-  if (h.sinceFire > 3 && h.calm > 3 && h.hp < h.stats.maxHp) h.hp = Math.min(h.stats.maxHp, h.hp + h.stats.maxHp * 0.07 * dt);
 }
 
 function takeGun(s: SimState, h: Hero, dropId: number): void {
