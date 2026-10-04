@@ -28,7 +28,7 @@ PROF     = $(if $(PROFILE),AWS_PROFILE=$(PROFILE) ,)
 AWS      = $(PROF)aws
 TF       = $(PROF)terraform -chdir=infra
 
-.PHONY: env board-check touch-check super-check pickup-check supers dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
+.PHONY: env board-check pause-check touch-check super-check pickup-check supers dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
 
 dev:
 	npm run dev
@@ -60,6 +60,9 @@ shots-setup:
 
 shots:
 	node scripts/shots.mjs
+
+pause-check:
+	node scripts/pause-check.mjs
 
 touch-check:
 	node scripts/touch-check.mjs

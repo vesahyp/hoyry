@@ -14,3 +14,4 @@ infra/*.tfstate.backup
 infra/.records.zip
 tools/dbg/
 shots/
+shots/pause/

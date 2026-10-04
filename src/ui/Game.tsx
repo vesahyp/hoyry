@@ -447,7 +447,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
             ))}
           </div>
           <OwnedCogs cogs={h0.cogs} />
-          <div className="row">
+          <div className="row pausebar">
             <button className="btn primary" onClick={() => setOverlay({ kind: 'none' })}>
               {tr('Jatka', 'Resume')}
             </button>
