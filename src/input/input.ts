@@ -143,6 +143,9 @@ export class InputController {
   };
 
   private onTouchMove = (e: TouchEvent) => {
+    // A drag that started on a menu is the menu's own: blocking it here is
+    // what kept a menu taller than a landscape phone from scrolling.
+    if ((e.target as HTMLElement).closest('[data-ui], button, .overlay')) return;
     for (const t of Array.from(e.changedTouches)) {
       for (const st of [this.move, this.aim, this.sup]) {
         if (st.touchId !== t.identifier) continue;

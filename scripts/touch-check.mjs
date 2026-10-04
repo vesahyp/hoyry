@@ -2,7 +2,11 @@
 // The game's touch handler blocks the default action of touches on the
 // play field; a menu it does not exempt cannot be tapped at all, while a
 // mouse click still works. That bug shipped once (the cog pick on the lift),
-// so this checks it, and that the super button still fires where it sits. Run with `make touch-check`; needs `make shots-setup`.
+// so this checks it, and that the super button still fires where it sits.
+// The same handler once blocked the drag that scrolls a menu, which left a
+// landscape phone stuck in a pause menu taller than the screen, so the
+// last part turns the phone sideways and scrolls with a finger.
+// Run with `make touch-check`; needs `make shots-setup`.
 import { chromium, devices } from 'playwright';
 import { spawn } from 'node:child_process';
 
@@ -82,6 +86,51 @@ try {
   await page.waitForTimeout(300);
   const floor = await page.evaluate(() => window.__sim.floor);
   check(floor === 2 && (await page.locator('.overlay').count()) === 0, 'a tap on a cog card on the lift starts floor 2');
+
+  // Landscape: every menu taller than the screen scrolls under a finger,
+  // and its last button can then be reached and tapped.
+  const land = await (await browser.newContext({ ...devices['iPhone 15 landscape'], hasTouch: true })).newPage();
+  const lcdp = await land.context().newCDPSession(land);
+  const swipeUp = async () => {
+    await lcdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 420, y: 330 }] });
+    for (let y = 310; y >= 30; y -= 20) await lcdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 420, y }] });
+    await lcdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await land.waitForTimeout(400);
+  };
+  const inView = async (loc) => {
+    const b = await loc.boundingBox();
+    return !!b && b.y >= 0 && b.y + b.height <= land.viewportSize().height;
+  };
+  await land.goto(`http://localhost:${port}/?lang=en&seed=1`);
+  await swipeUp();
+  await land.getByRole('button', { name: 'Play', exact: true }).tap();
+  await swipeUp();
+  const pick = land.getByRole('button', { name: /The Engineer/ });
+  check(await inView(land.locator('.hero').last()), 'landscape: hero select scrolls to the last hero');
+  await pick.tap();
+  await land.waitForTimeout(500);
+  await land.evaluate(() => {
+    const h = window.__sim.heroes[0];
+    h.guns.push({ ...h.guns[0], gun: { ...h.guns[0].gun, id: -1 } });
+  });
+  await land.locator('.iconbtn.pause').tap();
+  await land.waitForSelector('.overlay');
+  await swipeUp();
+  check(await inView(land.getByRole('button', { name: 'Quit' })), 'landscape: the pause menu with two guns scrolls to Quit');
+  await land.getByRole('button', { name: 'Resume' }).tap();
+  await land.waitForTimeout(300);
+  check((await land.locator('.overlay').count()) === 0, 'landscape: Resume closes the pause menu');
+  await land.evaluate(() => {
+    const h = window.__sim.heroes[0];
+    h.hp = 0;
+    h.alive = false;
+    window.__sim.gameOver = true;
+  });
+  await land.waitForSelector('.screen.death', { timeout: 10000 });
+  await land.waitForTimeout(1500);
+  await swipeUp();
+  const last = land.locator('.screen.death button').last();
+  check(await inView(last), 'landscape: the death screen scrolls to its last button');
 } finally {
   await browser.close();
   server.kill();
