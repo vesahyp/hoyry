@@ -5,10 +5,11 @@
 #   make dev           # vite dev server
 #   make build         # production build -> dist/
 #   make preview       # build, then serve it locally
-#   make check         # typecheck + build + sim-check + super-check + pickup-check, what a commit needs green
+#   make check         # typecheck + build + sim-check + gauntlet + super-check + pickup-check + gauntlet-check, what a commit needs green
 #   make balance       # bot runs, one line per run (FLOORS ?= 10 RUNS ?= 2 HERO ?=)
 #   make deaths        # what hurts the hero, floor by floor, over bot runs (same knobs)
 #   make gauntlet      # the human profile of the bot plays floors FROM..TO (6..8) from a typical build; fails under 60 % clears
+#   make gauntlet-check # one such run on an emulated iPhone at real speed, on video (shots/gauntlet/); must clear 6, 7 and 8
 #   make supers        # each super in bot fights, then the lab (FLOORS RUNS HERO as above)
 #   make shots-setup   # once: install Playwright
 #   make shots         # phone screenshots into shots/
@@ -30,7 +31,7 @@ PROF     = $(if $(PROFILE),AWS_PROFILE=$(PROFILE) ,)
 AWS      = $(PROF)aws
 TF       = $(PROF)terraform -chdir=infra
 
-.PHONY: env board-check pause-check touch-check super-check pickup-check supers deaths gauntlet dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
+.PHONY: env board-check pause-check touch-check super-check pickup-check supers deaths gauntlet gauntlet-check dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
 
 dev:
 	npm run dev
@@ -45,8 +46,10 @@ check:
 	npm run typecheck
 	npm run build
 	npm run sim-check
+	npm run gauntlet
 	$(MAKE) super-check
 	$(MAKE) pickup-check
+	$(MAKE) gauntlet-check
 
 FLOORS ?= 10
 RUNS ?= 2
@@ -82,6 +85,9 @@ super-check:
 
 pickup-check:
 	node scripts/pickup-check.mjs
+
+gauntlet-check:
+	node scripts/gauntlet-check.mjs
 
 BASE ?=
 board-check:

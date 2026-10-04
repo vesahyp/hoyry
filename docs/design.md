@@ -120,6 +120,18 @@ Every enemy attack is slow enough to see and dodge. That is the rule that
 makes a twin-stick game fair: an enemy shot is a large slow orb, a mortar
 shows its landing circle before it lands, a charger winds up.
 
+The rule has numbers (`weapons.ts`): an enemy bullet flies at most 360 px/s
+and an enemy blast is three quarters of a hero's. A clockwork (Kellosepät)
+gun in an enemy hand turns its shot at most 1.4 rad/s, flies it straight for
+the last 72 px, drops it at the end of its range, and one of the hero's
+bullets breaks it; it winds up longer, in brass, and ticks when fired. One
+clockwork gunner at a time, none before floor 3. The proof that the rule
+holds is `npm run gauntlet`: the bot with a person's limits (a reaction
+time, a thumb, a tap rate, an aim a little off) must clear floors 6 to 8 in
+most runs, and `make gauntlet-check` plays one such run on an emulated
+iPhone on video. Before this (2026-10-04) a clockwork shot turned at 3.6
+rad/s, a 60 px circle at enemy bullet speed, and no sidestep beat it.
+
 The cast is the works come alive: cog rats in swarms, rivet gunners, boiler
 brutes that charge, mortar crews, bomb walkers that run at you and burst,
 turret towers. Elites have a gold ring and a name built from affixes (Nopea,

@@ -69,13 +69,21 @@ src/
 tools/
   sim-check.ts           npm run sim-check: gun table + assertions
   balance.ts             npm run balance: bot runs, one line per run
+  deaths.ts              npm run deaths: what hurt the hero, by floor and source
+  gauntlet.ts            npm run gauntlet: the human profile of the bot plays
+                           floors 6 to 8 from a typical build; fails under 60 %
+  build.ts               practiceRun: a run that starts on floor N with the
+                           build a run has by then (?floor=N, the gauntlet)
   supers.ts            npm run supers: each super in bot fights + the lab
   lab.ts               the super lab: open room, dummies, one press
-  autoplayer.ts          the bot both tools use
+  autoplayer.ts          the bot every tool uses, and its two profiles:
+                           BOT (the floor) and HUMAN (a thumb on a phone)
   dbg/stuck.ts           map dump for a stuck floor; not committed
 scripts/shots.mjs        npm run shots: Playwright, iPhone 15, ?bot=1&speed=3
 scripts/super-check.mjs  make super-check: each super tapped in a fight hits
 scripts/pickup-check.mjs make pickup-check: a gun pickup moves without a jump
+scripts/gauntlet-check.mjs make gauntlet-check: floors 6 to 8 on an emulated
+                         iPhone by the human profile, on video (shots/gauntlet/)
 ```
 
 ## Rules
@@ -117,14 +125,23 @@ scripts/pickup-check.mjs make pickup-check: a gun pickup moves without a jump
 
 - `make dev` (http://localhost:5173, also on the LAN for a phone).
 - **Before committing:** `make check` (typecheck, build, `sim-check`,
-  `super-check`, `pickup-check`) must pass. The last two drive an emulated
-  iPhone, so they need `make shots-setup` once. `sim-check` prints the gun table first; read it when you touched a
+  `gauntlet`, `super-check`, `pickup-check`, `gauntlet-check`) must pass.
+  The last three drive an emulated iPhone, so they need `make shots-setup`
+  once. `sim-check` prints the gun table first; read it when you touched a
   gun maker, type or rarity curve.
 - **Balance with `make balance [FLOORS=10] [RUNS=2] [HERO=]`.** The bot
   kites and takes better guns but has no plan. A change that moves the
   bot's average floor moves the player's run the same way. `make deaths`
   (same knobs) says what the damage came from, floor by floor: every hit
   on a hero carries its source through `hurtHero` (`s.onHurt`).
+  `make gauntlet [FROM=6 TO=8 RUNS=8 HERO=]` is the player's floor: the
+  bot with a person's limits (`HUMAN` in `tools/autoplayer.ts`) from the
+  build a run has by then (`tools/build.ts`), and it fails under 60 %
+  clears. A floor band the gauntlet fails is unfair, not hard.
+- **URL knobs for testing:** `?seed=N` fixes the run, `?floor=N` starts
+  on floor N with a typical build (a practice run: no leaderboard),
+  `?bot=1` plays the bot, `?bot=human` the bot with a person's limits,
+  `?speed=3` runs the sim at three times real time, `?lang=en`.
 - `make shots` / `make shots-en` for phone screenshots (Playwright, iPhone
   15, `?bot=1&speed=3&seed=`), never from a hand-held browser.
 - `make touch-check` when you touch a menu or the input: it taps through

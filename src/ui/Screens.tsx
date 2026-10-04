@@ -109,7 +109,7 @@ export function Select({ records, onPick, onBack }: { records: Records; onPick: 
 
 export function Death({ r, rank, heroBest, onAgain, onMenu }: { r: RunSummary; rank: number; heroBest: boolean; onAgain: () => void; onMenu: () => void }) {
   // A run that ends on floor 1 cleared nothing and stays off the table; the API refuses it too.
-  const [stage, setStage] = useState<'ask' | 'done'>(RECORDS_ON && r.floor >= 2 ? 'ask' : 'done');
+  const [stage, setStage] = useState<'ask' | 'done'>(RECORDS_ON && r.floor >= 2 && !r.practice ? 'ask' : 'done');
   const [ranks, setRanks] = useState<Record<Period, number> | null>(null);
   return (
     <div className="screen death">
@@ -124,6 +124,7 @@ export function Death({ r, rank, heroBest, onAgain, onMenu }: { r: RunSummary; r
         />
       )}
       {ranks && <RankLine ranks={ranks} />}
+      {r.practice && <div className="record">{tr(`Harjoitus kerroksesta ${r.practice} alkaen: ei ennätyksiin`, `Practice from floor ${r.practice}: not a record`)}</div>}
       {rank === 0 && <div className="record">{tr('Uusi ennätys!', 'New record!')}</div>}
       {rank > 0 && <div className="record">{tr(`Sija ${rank + 1} ennätyksissä`, `Number ${rank + 1} in your records`)}</div>}
       {rank !== 0 && heroBest && <div className="record">{tr(`${t(r.hero.name)}: paras tähän asti`, `${t(r.hero.name)}: best so far`)}</div>}

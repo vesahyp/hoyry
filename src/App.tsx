@@ -61,6 +61,11 @@ function Screens() {
           onQuit={() => setScreen({ kind: 'select' })}
           onRestart={() => start(screen.hero)}
           onEnd={(r) => {
+            // A practice run (?floor=N) is not a record, here or on the board.
+            if (r.practice) {
+              setScreen({ kind: 'dead', r, rank: -1, heroBest: false });
+              return;
+            }
             const best = [...r.guns].sort((a, b) => b.rarity - a.rarity)[0];
             const saved = saveRun({
               hero: r.hero.id,

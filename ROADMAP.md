@@ -5,8 +5,10 @@ The design is in `docs/design.md`.
 
 ## Next
 
-- Playtest by hand on a phone; the bot is the only player so far. Tune
-  what feels wrong with `make balance` beside it.
+- Keep playtesting by hand on a phone (`?floor=N` skips to the floor in
+  question). The first playtest found floors 6 to 8 unfair; the gauntlet
+  (`make gauntlet`) now guards them. Tune what feels wrong with
+  `make deaths` and `make balance` beside it.
 - The bot no longer kites the last enemies of a floor, and the sweep and
   the aeronaut now die a little earlier in its runs. Check after the
   playtest whether that is the bot or the game.

@@ -12,7 +12,8 @@ import { Renderer } from '../render/renderer';
 import { InputController } from '../input/input';
 import { audio } from '../audio';
 import { Rng } from '../game/rng';
-import { botInput, botPickCog } from '../../tools/autoplayer';
+import { botInput, botPickCog, humanPickCog, BOT, HUMAN } from '../../tools/autoplayer';
+import { practiceRun } from '../../tools/build';
 import { track } from '../records';
 import { t, tr, num } from '../i18n';
 import { CogCard, GunCard } from './Cards';
@@ -27,6 +28,8 @@ export interface RunSummary {
   bosses: number;
   guns: Gun[];
   bestRarity: number;
+  /** the floor a ?floor=N run started on (not a record), 0 for a real run */
+  practice: number;
 }
 
 interface Hud {
@@ -68,7 +71,12 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
   useEffect(() => {
     const canvas = canvasRef.current!;
     const root = rootRef.current!;
-    const s = newRun(seed, heroes);
+    // ?floor=N starts on that floor with the build a run has by then
+    // (tools/build.ts), for playing the hard floors without the easy ones
+    // first. Such a run is practice: it goes on no leaderboard.
+    const asked = Number(new URLSearchParams(location.search).get('floor'));
+    const practice = Number.isInteger(asked) && asked >= 2 && asked <= 40 ? asked : 0;
+    const s = practice ? practiceRun(seed, heroes, asked) : newRun(seed, heroes);
     simRef.current = s;
     (window as unknown as { __sim: SimState }).__sim = s;
     const renderer = new Renderer(canvas);
@@ -76,7 +84,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
     const input = new InputController();
     input.attach(root);
     inputRef.current = input;
-    track('run_start', { hero: heroes.map((h) => h.id).join('+'), seed });
+    track('run_start', { hero: heroes.map((h) => h.id).join('+'), seed, practice });
     audio.unlock();
     audio.startMusic();
 
@@ -99,8 +107,12 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
     window.visualViewport?.addEventListener('resize', onResize);
     layoutSuper();
 
+    // ?bot=1 is the bot, ?bot=human the bot with a person's limits (tools/autoplayer.ts).
     const params = new URLSearchParams(location.search);
-    const bot = params.get('bot') === '1';
+    const botKind = params.get('bot');
+    const bot = botKind === '1' || botKind === 'human';
+    const who = botKind === 'human' ? HUMAN : BOT;
+    const pickCog = botKind === 'human' ? humanPickCog : botPickCog;
     const speed = Math.max(1, Number(params.get('speed') ?? 1));
     const botRng = new Rng(seed ^ 0x5151);
     const perf = { frames: 0, ms: 0, worst: 0 };
@@ -114,6 +126,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
       track('run_end', {
         hero: heroes.map((x) => x.id).join('+'),
         how,
+        practice,
         floor: s.floor,
         time: Math.round(s.time),
         kills: s.run.kills,
@@ -187,7 +200,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
         while (acc >= DT && n < 4 * speed) {
           const hpBefore = h0.hp;
           const ammoBefore = h0.guns.map((g) => g.ammo);
-          step(s, s.heroes.map((h) => (bot ? botInput(s, h, botRng) : input.read())), DT);
+          step(s, s.heroes.map((h) => (bot ? botInput(s, h, botRng, who) : input.read())), DT);
           acc -= DT;
           n++;
           // Hit stop: a kill of an elite or boss, or a hit that costs the
@@ -210,7 +223,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
           }
           if (s.phase === 'done') {
             if (bot) {
-              for (let k = 0; k < s.pendingCogs; k++) applyCog(h0, botPickCog(rollCogs(s, h0), botRng).id);
+              for (let k = 0; k < s.pendingCogs; k++) applyCog(h0, pickCog(rollCogs(s, h0), botRng).id);
               s.pendingCogs = 0;
               nextFloor(s);
             } else {
@@ -226,7 +239,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
         if (deathAcc > 1.8 && !endedRef.current) {
           endedRef.current = true;
           report('death');
-          onEnd({ hero: heroes[0], floor: s.floor, time: s.time, kills: s.run.kills, coins: s.run.coins, bosses: s.run.bosses, guns: h0.guns.map((g) => g.gun), bestRarity: s.run.bestRarity });
+          onEnd({ hero: heroes[0], floor: s.floor, time: s.time, kills: s.run.kills, coins: s.run.coins, bosses: s.run.bosses, guns: h0.guns.map((g) => g.gun), bestRarity: s.run.bestRarity, practice });
         }
       }
       // A gun taken: the card flies into the slot it went to. The card is

@@ -108,6 +108,13 @@ ja sytyttävät vierekkäiset. **Höyryventtiilit** puhaltavat höyryä ajoittai
 ja polttavat ihon. **Koski** lattiassa estää kävelyn muttei pysäytä luotia, joten
 ammu sen yli.
 
+Vihollisen luoti on iso ja hidas, ja askel sivuun väistää sen. **Kellosepät-
+aseen laukaus** on messinkinen, tikittää lähtiessään, ja ampuja tähtää ensin
+messinkisellä katkoviivalla. Se kaartaa perääsi, mutta kääntyy hitaasti,
+lentää viimeisen matkan suoraan ja putoaa kantamansa päässä: askel sivuun
+viime hetkellä riittää, ja oma luotisi rikkoo sen ilmassa. Kellosepät-ampujia
+on kerralla vain yksi, eikä yhtään ennen kolmatta kerrosta.
+
 ## Kehittäjälle
 
 Koodi ja arkkitehtuuri: [`CLAUDE.md`](./CLAUDE.md). Suunnittelu:
@@ -168,6 +175,13 @@ times a rarity (grey, green, blue, purple, orange). Orange guns are named
 and break a rule: the Coffee Pot heals you, the Cuckoo Clock's sixth shot
 will not give up, Granny's Umbrella blocks shots while you hold your fire,
 and four more.
+
+**Enemy shots** are big and slow, and a sidestep beats them. A **clockwork
+(Kellosepät) shot** is brass, ticks as it leaves the gun, and the gunner aims
+first with a brass dashed line. It curves after you, but it turns slowly,
+flies straight for the last stretch and drops at the end of its range: a late
+sidestep dodges it, and one of your own bullets breaks it in the air. Only one
+clockwork gunner at a time, and none before floor 3.
 
 **Heroes:** the Sweep (scattergun, dashes through the target and bursts
 into soot), the Engineer (revolver, drops a turret), the Aeronaut (mortar,
