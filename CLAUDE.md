@@ -75,6 +75,7 @@ tools/
   dbg/stuck.ts           map dump for a stuck floor; not committed
 scripts/shots.mjs        npm run shots: Playwright, iPhone 15, ?bot=1&speed=3
 scripts/super-check.mjs  make super-check: each super tapped in a fight hits
+scripts/pickup-check.mjs make pickup-check: a gun pickup moves without a jump
 ```
 
 ## Rules
@@ -116,8 +117,8 @@ scripts/super-check.mjs  make super-check: each super tapped in a fight hits
 
 - `make dev` (http://localhost:5173, also on the LAN for a phone).
 - **Before committing:** `make check` (typecheck, build, `sim-check`,
-  `super-check`) must pass. `super-check` drives an emulated iPhone, so
-  it needs `make shots-setup` once. `sim-check` prints the gun table first; read it when you touched a
+  `super-check`, `pickup-check`) must pass. The last two drive an emulated
+  iPhone, so they need `make shots-setup` once. `sim-check` prints the gun table first; read it when you touched a
   gun maker, type or rarity curve.
 - **Balance with `make balance [FLOORS=10] [RUNS=2] [HERO=]`.** The bot
   kites and takes better guns but has no plan. A change that moves the

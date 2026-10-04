@@ -41,7 +41,7 @@ try {
 
   // A second gun: the swap button beside the super swaps on one tap, the
   // move stick still held, and a swap pressed mid-burst is not lost.
-  check((await page.locator('.swapbtn').count()) === 0, 'no swap button with one gun');
+  check((await page.locator('.swapbtn:visible').count()) === 0, 'no swap button with one gun');
   await page.evaluate(() => {
     const h = window.__sim.heroes[0];
     h.guns.push({ ...h.guns[0], gun: { ...h.guns[0].gun, id: -1 } });

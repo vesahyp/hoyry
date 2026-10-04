@@ -5,13 +5,14 @@
 #   make dev           # vite dev server
 #   make build         # production build -> dist/
 #   make preview       # build, then serve it locally
-#   make check         # typecheck + build + sim-check + super-check, what a commit needs green
+#   make check         # typecheck + build + sim-check + super-check + pickup-check, what a commit needs green
 #   make balance       # bot runs, one line per run (FLOORS ?= 10 RUNS ?= 2 HERO ?=)
 #   make supers        # each super in bot fights, then the lab (FLOORS RUNS HERO as above)
 #   make shots-setup   # once: install Playwright
 #   make shots         # phone screenshots into shots/
 #   make shots-en      # the same in English, into shots/en/
 #   make touch-check   # taps through the menus on an emulated phone
+#   make pickup-check  # a gun pickup on an emulated iPhone: the card slides in and flies to its slot without a jump
 #   make super-check   # each hero's super, tapped in a fight on an emulated iPhone, hits
 #   make board-check   # the leaderboard end to end (BASE=https://... checks the live game)
 #   make plan          # terraform plan for infra/: the pixel host and the records API
@@ -27,7 +28,7 @@ PROF     = $(if $(PROFILE),AWS_PROFILE=$(PROFILE) ,)
 AWS      = $(PROF)aws
 TF       = $(PROF)terraform -chdir=infra
 
-.PHONY: env board-check touch-check super-check supers dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
+.PHONY: env board-check touch-check super-check pickup-check supers dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
 
 dev:
 	npm run dev
@@ -43,6 +44,7 @@ check:
 	npm run build
 	npm run sim-check
 	$(MAKE) super-check
+	$(MAKE) pickup-check
 
 FLOORS ?= 10
 RUNS ?= 2
@@ -64,6 +66,9 @@ touch-check:
 
 super-check:
 	node scripts/super-check.mjs
+
+pickup-check:
+	node scripts/pickup-check.mjs
 
 BASE ?=
 board-check:

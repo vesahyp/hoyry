@@ -159,6 +159,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
     let hitStop = 0;
     let ammoBlinkT = [0, 0];
     let prevEnemies = new Map<number, { big: boolean }>();
+    let gunsTaken = s.run.guns;
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
@@ -227,6 +228,12 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
           report('death');
           onEnd({ hero: heroes[0], floor: s.floor, time: s.time, kills: s.run.kills, coins: s.run.coins, bosses: s.run.bosses, guns: h0.guns.map((g) => g.gun), bestRarity: s.run.bestRarity });
         }
+      }
+      // A gun taken: the card flies into the slot it went to. The card is
+      // still in the DOM here, since React only drops it on the next HUD.
+      if (s.run.guns !== gunsTaken) {
+        gunsTaken = s.run.guns;
+        flyToSlot(root, h0.active);
       }
       if (s.sounds.length) {
         for (const name of s.sounds) audio.play(name);
@@ -379,27 +386,33 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
 
       {/* The swap button: beside the super, under the right thumb, so a swap
           mid-fight never means letting go of the move stick. It shows the gun
-          you swap to. Pointer down, not click: it acts on the touch itself. */}
-      {other && (
-        <button
-          className="swapbtn"
-          data-ui
-          style={{ borderColor: RARITY_COLOR[other.gun.rarity] }}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            inputRef.current?.swap();
-          }}
-          aria-label={tr(`Vaihda: ${t(other.gun.name)}`, `Swap to ${t(other.gun.name)}`)}
-        >
-          <span>⇄</span>
-          <small style={{ color: RARITY_COLOR[other.gun.rarity] }}>{t(TYPE_NAME[other.gun.type])}</small>
-          <div className="pips">
-            {Array.from({ length: other.max }, (_, k) => (
-              <i key={k} className={k < Math.floor(other.ammo) ? 'full' : ''} />
-            ))}
-          </div>
-        </button>
-      )}
+          you swap to. Pointer down, not click: it acts on the touch itself.
+          Mounted from the start and hidden until a second gun is held: the
+          first draw of the ⇄ glyph looks up a fallback font, which held one
+          frame for over 100 ms, and it fell on the frame you took the gun. */}
+      <button
+        className={`swapbtn ${other ? '' : 'off'}`}
+        data-ui
+        style={other ? { borderColor: RARITY_COLOR[other.gun.rarity] } : undefined}
+        onPointerDown={(e) => {
+          e.preventDefault();
+          if (other) inputRef.current?.swap();
+        }}
+        aria-hidden={!other}
+        aria-label={other ? tr(`Vaihda: ${t(other.gun.name)}`, `Swap to ${t(other.gun.name)}`) : undefined}
+      >
+        <span>⇄</span>
+        {other && (
+          <>
+            <small style={{ color: RARITY_COLOR[other.gun.rarity] }}>{t(TYPE_NAME[other.gun.type])}</small>
+            <div className="pips">
+              {Array.from({ length: other.max }, (_, k) => (
+                <i key={k} className={k < Math.floor(other.ammo) ? 'full' : ''} />
+              ))}
+            </div>
+          </>
+        )}
+      </button>
 
       {/* the super button; touches on it are read by the input, not React */}
       <div ref={superRef} className={`superbtn ${hud && hud.superCharge >= 1 ? 'ready' : ''}`} style={{ ['--charge' as string]: `${Math.round((hud?.superCharge ?? 0) * 100)}%` }}>
@@ -493,4 +506,38 @@ function drawSticks(input: InputController, move: HTMLDivElement | null, aim: HT
     const k = d > 0 ? m / d : 0;
     (el.firstChild as HTMLDivElement).style.transform = `translate(calc(-50% + ${dx * k}px), calc(-50% + ${dy * k}px))`;
   }
+}
+
+/**
+ * The taken gun's card flies from where it sat into slot `index` and
+ * shrinks to the slot's width. Screen space only, start to end, so it never
+ * hops between the world and the HUD. The Web Animations API runs it on
+ * time, not frames: the same 0.42 s at 60 Hz or 120 Hz, and a dropped frame
+ * skips ahead instead of stalling. Ease-in-out with no overshoot: the card
+ * leaves its place from rest and comes to rest on the slot, so neither end
+ * has a sudden change of speed.
+ */
+function flyToSlot(root: HTMLElement, index: number): void {
+  const card = root.querySelector<HTMLElement>('.pickup .gun');
+  const slot = root.querySelectorAll<HTMLElement>('.slots .slot')[index];
+  if (!card || !slot) return;
+  const from = card.getBoundingClientRect();
+  const to = slot.getBoundingClientRect();
+  const home = root.getBoundingClientRect();
+  const fly = card.cloneNode(true) as HTMLElement;
+  fly.classList.add('flygun');
+  Object.assign(fly.style, { left: `${from.left - home.left}px`, top: `${from.top - home.top}px`, width: `${from.width}px` });
+  root.appendChild(fly);
+  const k = to.width / from.width;
+  const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+  const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+  fly
+    .animate(
+      [
+        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px) scale(${k})`, opacity: 0 },
+      ],
+      { duration: 420, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' },
+    )
+    .finished.then(() => fly.remove(), () => fly.remove());
 }
