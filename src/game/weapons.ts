@@ -282,7 +282,7 @@ export function updateProjectiles(s: SimState, dt: number): void {
           impact(s, p, p.x, p.y);
           break;
         }
-        hurtHero(s, h, p.damage, p.x, p.y);
+        hurtHero(s, h, p.damage, p.x, p.y, 0, `${p.gunType}:${p.maker}`);
         p.dead = true;
         break;
       }
@@ -334,7 +334,7 @@ function steer(s: SimState, p: Projectile, dt: number): void {
 function impact(s: SimState, p: Projectile, x: number, y: number): void {
   p.dead = true;
   if (p.blast > 0) {
-    explode(s, x, y, p.blast, p.damage, p.team, p.owner, 240, p.element === 'frost' ? '#bfefff' : p.element === 'shock' ? '#8fe0ff' : '#ffb040');
+    explode(s, x, y, p.blast, p.damage, p.team, p.owner, 240, p.element === 'frost' ? '#bfefff' : p.element === 'shock' ? '#8fe0ff' : '#ffb040', true, `${p.gunType}:${p.maker}:blast`);
     if (p.team === 0 && p.element !== 'none') {
       for (const e of s.enemies) if (!e.dead && Math.hypot(e.x - x, e.y - y) < p.blast) hurtEnemy(s, e, 1, { owner: p.owner, element: p.element, legend: null, x, y, kb: 0, proc: false });
     }
@@ -362,7 +362,7 @@ function land(s: SimState, p: Projectile): void {
     }
     return;
   }
-  explode(s, x, y, p.blast, p.damage, p.team, p.owner, 220, p.team === 1 ? '#ff7050' : '#ffb040');
+  explode(s, x, y, p.blast, p.damage, p.team, p.owner, 220, p.team === 1 ? '#ff7050' : '#ffb040', true, `mortar:${p.maker}`);
   if (p.element === 'fire' || (p.team === 0 && p.maker === 'torpeedo' && p.legend === null && s.rng.chance(0.3))) {
     s.zones.push({ id: newId(s), kind: 'fire', team: p.team, owner: p.owner, x, y, r: p.blast * 0.8, dps: p.damage * 0.3, life: 3, maxLife: 3 });
   }
@@ -414,6 +414,7 @@ export function updateZones(s: SimState, dt: number): void {
         if (!h.alive || h.leap || Math.hypot(h.x - z.x, h.y - z.y) > z.r + h.r * 0.5) continue;
         if (h.invuln <= 0) {
           h.hp -= z.dps * dt * (1 - h.stats.armor);
+          if (s.onHurt) s.onHurt(h, z.dps * dt * (1 - h.stats.armor), `zone:${z.kind}`);
           h.hurtFlash = Math.max(h.hurtFlash, 0.05);
           if (h.hp <= 0) hurtHero(s, h, 1, z.x, z.y);
         }

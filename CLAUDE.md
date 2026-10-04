@@ -122,7 +122,9 @@ scripts/pickup-check.mjs make pickup-check: a gun pickup moves without a jump
   gun maker, type or rarity curve.
 - **Balance with `make balance [FLOORS=10] [RUNS=2] [HERO=]`.** The bot
   kites and takes better guns but has no plan. A change that moves the
-  bot's average floor moves the player's run the same way.
+  bot's average floor moves the player's run the same way. `make deaths`
+  (same knobs) says what the damage came from, floor by floor: every hit
+  on a hero carries its source through `hurtHero` (`s.onHurt`).
 - `make shots` / `make shots-en` for phone screenshots (Playwright, iPhone
   15, `?bot=1&speed=3&seed=`), never from a hand-held browser.
 - `make touch-check` when you touch a menu or the input: it taps through

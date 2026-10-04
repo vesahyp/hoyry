@@ -140,11 +140,12 @@ export function heal(s: SimState, h: Hero, amount: number): void {
   if (h.hp - before >= 4) text(s, h.x, h.y - 18, `+${Math.round(h.hp - before)}`, '#7dff9a');
 }
 
-export function hurtHero(s: SimState, h: Hero, dmg: number, x: number, y: number, kb = 0): void {
+export function hurtHero(s: SimState, h: Hero, dmg: number, x: number, y: number, kb = 0, src = 'other'): void {
   if (!h.alive || h.invuln > 0 || h.leap || h.dash) return;
   let d = dmg * (1 - h.stats.armor);
   if (h.shield > 0) d *= 0.3;
   h.hp -= d;
+  if (s.onHurt) s.onHurt(h, d, src);
   h.hurtFlash = 0.2;
   h.invuln = 0.12;
   s.shake = Math.max(s.shake, 0.18);
@@ -179,7 +180,7 @@ export function hurtHero(s: SimState, h: Hero, dmg: number, x: number, y: number
  * A blast: hurts the other team in the radius, breaks crates, sets off
  * barrels. Team -1 (a barrel) hurts everyone.
  */
-export function explode(s: SimState, x: number, y: number, r: number, dmg: number, team: Team | -1, owner: number, kb = 260, color = '#ffb040', charge = true): void {
+export function explode(s: SimState, x: number, y: number, r: number, dmg: number, team: Team | -1, owner: number, kb = 260, color = '#ffb040', charge = true, src = 'blast'): void {
   effect(s, 'blast', x, y, r, color, 0.4);
   s.shake = Math.max(s.shake, Math.min(0.35, r / 300));
   s.sounds.push('boom');
@@ -187,7 +188,7 @@ export function explode(s: SimState, x: number, y: number, r: number, dmg: numbe
     for (const h of s.heroes) {
       if (!h.alive) continue;
       const d = Math.hypot(h.x - x, h.y - y);
-      if (d < r + h.r) hurtHero(s, h, dmg * (team === -1 ? 0.5 : 1) * (d < r * 0.5 ? 1 : 0.7), x, y, kb);
+      if (d < r + h.r) hurtHero(s, h, dmg * (team === -1 ? 0.5 : 1) * (d < r * 0.5 ? 1 : 0.7), x, y, kb, team === -1 ? 'barrel' : src);
     }
   }
   if (team !== 1) {

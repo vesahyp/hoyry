@@ -585,7 +585,7 @@ function updateEnemy(s: SimState, e: Enemy, dt: number): void {
         go(1, 0, 0.35);
         if (e.modeT <= 0) {
           e.dead = true;
-          explode(s, e.x, e.y, 72, e.touch, 1, -1, 380, '#ff5020');
+          explode(s, e.x, e.y, 72, e.touch, 1, -1, 380, '#ff5020', true, 'bomber');
           s.run.kills++;
         }
       } else {
@@ -635,7 +635,7 @@ function updateEnemy(s: SimState, e: Enemy, dt: number): void {
 
 function contact(s: SimState, e: Enemy, h: Hero, dist: number): void {
   if (dist < e.r + h.r + 2 && e.modeT <= 0) {
-    hurtHero(s, h, e.touch, e.x, e.y, 120);
+    hurtHero(s, h, e.touch, e.x, e.y, 120, `touch:${e.kind}`);
     e.modeT = 0.7;
   }
 }
@@ -657,7 +657,7 @@ function brute(s: SimState, e: Enemy, h: Hero, dx: number, dy: number, dist: num
       const by = e.y;
       moveCircle(s.arena, e, e.r, e.cx * 400 * dt, e.cy * 400 * dt);
       if (Math.hypot(e.x - h.x, e.y - h.y) < e.r + h.r + 4) {
-        hurtHero(s, h, e.touch * 1.4, e.x, e.y, 600);
+        hurtHero(s, h, e.touch * 1.4, e.x, e.y, 600, `charge:${e.kind}`);
         e.mode = 'recover';
         e.modeT = 0.9;
       } else if (Math.hypot(e.x - bx, e.y - by) < 2 || e.modeT <= 0) {
