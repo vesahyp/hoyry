@@ -31,6 +31,10 @@ export interface Shooter {
  */
 export const ENEMY_HOMING = 1.4;
 export const ENEMY_HOMING_OFF = 72;
+/** The fastest an enemy bullet flies, px/s: a rifle's would otherwise cross a kiting distance in half a second. */
+export const ENEMY_SHOT_MAX = 360;
+/** An enemy's explosive shot has a smaller blast: the sidestep that beats the bullet has to beat the blast too. */
+export const ENEMY_BLAST_MUL = 0.75;
 
 export function maxAmmo(held: Held, hero: Hero | null): number {
   return held.gun.ammo + (hero ? hero.stats.extraAmmo : 0);
@@ -100,12 +104,12 @@ function emitShot(s: SimState, sh: Shooter, held: Held, angle: number, reach: nu
     (held as Held & { over?: boolean }).over = false;
   }
   const range = g.range * (st ? st.rangeMul : 1);
-  const speed = g.speed * (st ? st.bulletSpeedMul : 1) * sh.slow;
   const enemy = sh.team === 1;
+  const speed = Math.min(g.speed * (st ? st.bulletSpeedMul : 1) * sh.slow, enemy ? ENEMY_SHOT_MAX : Infinity);
   const size = enemy ? Math.max(7, g.size * 1.5) : g.size;
   const pierce = g.pierce + (st ? st.pierce : 0);
   const bounces = g.bounces + (st ? st.bounces : 0);
-  const blast = g.blast * (st ? st.blastMul : 1);
+  const blast = g.blast * (st ? st.blastMul : 1) * (enemy ? ENEMY_BLAST_MUL : 1);
   const split = cogLevel(hero ?? undefined, 'sirpaleet') > 0;
   const mx = sh.x + Math.cos(angle) * 16;
   const my = sh.y + Math.sin(angle) * 16;
