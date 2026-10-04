@@ -8,6 +8,7 @@
 #   make check         # typecheck + build + sim-check + super-check + pickup-check, what a commit needs green
 #   make balance       # bot runs, one line per run (FLOORS ?= 10 RUNS ?= 2 HERO ?=)
 #   make deaths        # what hurts the hero, floor by floor, over bot runs (same knobs)
+#   make gauntlet      # the human profile of the bot plays floors FROM..TO (6..8) from a typical build; fails under 60 % clears
 #   make supers        # each super in bot fights, then the lab (FLOORS RUNS HERO as above)
 #   make shots-setup   # once: install Playwright
 #   make shots         # phone screenshots into shots/
@@ -29,7 +30,7 @@ PROF     = $(if $(PROFILE),AWS_PROFILE=$(PROFILE) ,)
 AWS      = $(PROF)aws
 TF       = $(PROF)terraform -chdir=infra
 
-.PHONY: env board-check pause-check touch-check super-check pickup-check supers deaths dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
+.PHONY: env board-check pause-check touch-check super-check pickup-check supers deaths gauntlet dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
 
 dev:
 	npm run dev
@@ -58,6 +59,11 @@ supers:
 
 deaths:
 	npm run deaths -- $(FLOORS) $(RUNS) $(HERO)
+
+FROM ?= 6
+TO ?= 8
+gauntlet:
+	npm run gauntlet -- $(FROM) $(TO) $(RUNS) $(HERO)
 
 shots-setup:
 	npm install --no-save playwright && npx playwright install chromium

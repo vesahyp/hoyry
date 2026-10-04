@@ -3,13 +3,67 @@ import { gunScore } from '../src/game/guns';
 import type { CogDef } from '../src/game/content/cogs';
 import type { Rng } from '../src/game/rng';
 import { NO_INPUT, type Hero, type HeroInput, type SimState } from '../src/game/state';
+import { DT } from '../src/game/sim';
 
 /**
- * The bot: kites at the gun's range, sidesteps bullets coming at it, fires
- * at whatever is nearest, takes a gun when it scores better, and walks to
- * the lift. It is a floor for balance, not a player: no plan, no use of
- * bushes, no saving the super.
+ * The bot: kites at the gun's range, sidesteps bullets coming at it, steps
+ * out of a charge lane, fires at whatever is nearest, takes a gun when it
+ * scores better, and walks to the lift. It is a floor for balance, not a
+ * player: no plan, no use of bushes, no saving the super.
+ *
+ * A `Player` profile puts a person's limits on it. BOT is the floor: it
+ * sees every bullet the step it leaves the gun and moves the stick in one
+ * step. HUMAN is a thumb on a phone: a quarter second before a new bullet
+ * or a windup registers, a stick that eases toward where it is going, a
+ * tap rate, and an aim a little off the target on every tap. The proof
+ * that a floor is beatable (npm run gauntlet) is run with HUMAN.
  */
+export interface Player {
+  /** seconds before a new bullet or a windup is noticed */
+  reaction: number;
+  /** the move stick eases toward its wish with this time constant, seconds */
+  thumb: number;
+  /** taps a second on the fire side, at most */
+  taps: number;
+  /** aim error on a drag, radians either way; 0 taps without dragging (auto-aim) */
+  aim: number;
+}
+export const BOT: Player = { reaction: 0, thumb: 0, taps: Infinity, aim: 0 };
+export const HUMAN: Player = { reaction: 0.25, thumb: 0.12, taps: 4, aim: 0.1 };
+
+interface Mem {
+  /** when each enemy bullet, and each windup or charge (by -enemy id), was first seen */
+  seen: Map<number, number>;
+  mx: number;
+  my: number;
+  lastTap: number;
+}
+const mems = new WeakMap<SimState, Map<number, Mem>>();
+function memOf(s: SimState, h: Hero): Mem {
+  let m = mems.get(s);
+  if (!m) {
+    m = new Map();
+    mems.set(s, m);
+  }
+  let mem = m.get(h.index);
+  if (!mem) {
+    mem = { seen: new Map(), mx: 0, my: 0, lastTap: -1 };
+    m.set(h.index, mem);
+  }
+  return mem;
+}
+
+/** True once `who` has had its reaction time since the thing keyed `id` was first seen. */
+function noticed(mem: Mem, s: SimState, who: Player, id: number): boolean {
+  if (who.reaction <= 0) return true;
+  let t0 = mem.seen.get(id);
+  if (t0 === undefined) {
+    t0 = s.time;
+    mem.seen.set(id, t0);
+  }
+  return s.time - t0 >= who.reaction;
+}
+
 const fields = new WeakMap<object, Map<number, Int16Array>>();
 
 /** A direction toward (x, y) along walkable ground, fields cached per arena and goal tile. */
@@ -31,11 +85,18 @@ function walkTo(s: SimState, h: Hero, x: number, y: number): { dx: number; dy: n
   return flowDir(a, h.x, h.y, f) ?? { dx: (x - h.x) / d, dy: (y - h.y) / d };
 }
 
-export function botInput(s: SimState, h: Hero, rng: Rng): HeroInput {
+export function botInput(s: SimState, h: Hero, rng: Rng, who: Player = BOT): HeroInput {
   const inp: HeroInput = { ...NO_INPUT };
   if (!h.alive) return inp;
   const held = h.guns[h.active];
   const g = held.gun;
+  const mem = memOf(s, h);
+  if (mem.seen.size > 300) {
+    const live = new Set<number>();
+    for (const p of s.projectiles) live.add(p.id);
+    for (const e of s.enemies) live.add(-e.id);
+    for (const k of mem.seen.keys()) if (!live.has(k)) mem.seen.delete(k);
+  }
   let mx = 0;
   let my = 0;
 
@@ -120,6 +181,11 @@ export function botInput(s: SimState, h: Hero, rng: Rng): HeroInput {
       mx += -dy * 0.6;
       my += dx * 0.6;
     }
+    // A boss walking into you costs a touch every 0.7 s: keep off its body.
+    if (tgt.boss && td < tgt.r + h.r + 50) {
+      mx -= dx * 2;
+      my -= dy * 2;
+    }
     if (td < range * 1.1 && (sees || g.type === 'mortar')) inp.fire = true;
     if (h.superCharge >= 1 && td < 220) inp.superFire = true;
   } else if (want) {
@@ -132,9 +198,35 @@ export function botInput(s: SimState, h: Hero, rng: Rng): HeroInput {
     my = f.dy;
   }
 
+  // A charge coming: a brute or a boss winding up draws its lane toward
+  // the hero, then runs it. Step out of the lane, sideways.
+  for (const e of s.enemies) {
+    if (e.dead) continue;
+    const charging = e.mode === 'charge';
+    const winding = e.mode === 'windup' && (e.behaviour === 'brute' || e.boss);
+    if (!charging && !winding) {
+      mem.seen.delete(-e.id);
+      continue;
+    }
+    if (!noticed(mem, s, who, -e.id)) continue;
+    const rx = h.x - e.x;
+    const ry = h.y - e.y;
+    const d = Math.hypot(rx, ry) || 1;
+    const ux = charging ? e.cx : rx / d;
+    const uy = charging ? e.cy : ry / d;
+    const along = rx * ux + ry * uy;
+    const across = rx * uy - ry * ux;
+    if (along < -10 || along > 340) continue;
+    if (Math.abs(across) > e.r + h.r + 24) continue;
+    const side = across >= 0 ? 1 : -1;
+    mx += uy * side * 3;
+    my += -ux * side * 3;
+  }
+
   // Dodge: the most threatening enemy shot within reach, step across its line.
   for (const p of s.projectiles) {
     if (p.team !== 1) continue;
+    if (!noticed(mem, s, who, p.id)) continue;
     if (p.lob) {
       const d = Math.hypot(p.lob.tx - h.x, p.lob.ty - h.y);
       if (d < p.blast + 14) {
@@ -164,6 +256,26 @@ export function botInput(s: SimState, h: Hero, rng: Rng): HeroInput {
     inp.mx = o.dx;
     inp.my = o.dy;
   }
+  // A thumb does not move the stick in one step.
+  if (who.thumb > 0) {
+    const k = Math.min(1, DT / who.thumb);
+    mem.mx += (inp.mx - mem.mx) * k;
+    mem.my += (inp.my - mem.my) * k;
+    inp.mx = mem.mx;
+    inp.my = mem.my;
+  }
+  // A tap rate, and a drag that lands a little off the target.
+  if (inp.fire && who.taps < Infinity) {
+    if (s.time - mem.lastTap < 1 / who.taps) inp.fire = false;
+    else {
+      mem.lastTap = s.time + rng.range(-0.04, 0.04);
+      if (who.aim > 0 && tgt && g.type !== 'mortar') {
+        const a = Math.atan2(tgt.y - h.y, tgt.x - h.x) + rng.range(-who.aim, who.aim);
+        inp.aimX = Math.cos(a);
+        inp.aimY = Math.sin(a);
+      }
+    }
+  }
 
   // Swap to the other gun when this one is dry and the other is not.
   if (!inp.swap && !inp.take && h.guns.length === 2 && held.ammo < 1 && h.guns[1 - h.active].ammo >= 2 && rng.chance(0.2)) inp.swap = true;
@@ -172,4 +284,12 @@ export function botInput(s: SimState, h: Hero, rng: Rng): HeroInput {
 
 export function botPickCog(offers: CogDef[], rng: Rng): CogDef {
   return offers[Math.floor(rng.next() * offers.length)];
+}
+
+/** What a player who wants to live picks: health, armour and speed first, then the gun. */
+const HUMAN_COGS = ['elinvoima', 'panssari', 'saappaat', 'lataus', 'kattila', 'imu', 'tahtain', 'vaali', 'ylipaine', 'tuli', 'pakkanen', 'lapaisy', 'kimmoke', 'ruumis', 'monipiippu', 'varaaja', 'tesla', 'sirpaleet', 'magneetti', 'kulta', 'vaihde', 'jalkipolte'];
+export function humanPickCog(offers: CogDef[], rng: Rng): CogDef {
+  const ranked = [...offers].sort((a, b) => HUMAN_COGS.indexOf(a.id) - HUMAN_COGS.indexOf(b.id));
+  // Mostly the best of the three, sometimes the second: nobody reads every card.
+  return ranked[rng.chance(0.8) ? 0 : Math.min(1, ranked.length - 1)];
 }
