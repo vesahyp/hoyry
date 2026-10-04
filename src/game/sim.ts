@@ -6,6 +6,7 @@ import type { HeroDef } from './content/heroes';
 import { hold, rollGun, MAKER_INFO, RARITY_COLOR } from './guns';
 import { createState, type Hero, type HeroInput, type SimState } from './state';
 import type { Enemy, Held } from './types';
+import { doSuper, flySuper, planSuper } from './supers';
 import { computeStats } from './upgrades';
 import { fireBursts, maxAmmo, tickHeld, tryAttack, updateProjectiles, updateZones, type Shooter } from './weapons';
 
@@ -44,6 +45,7 @@ export function newRun(seed: number, defs: HeroDef[]): SimState {
       superCharge: 0,
       dash: null,
       leap: null,
+      superPlan: { on: false, angle: 0, dist: 0, x: 0, y: 0, locked: -1 },
       shield: 0,
       cogs: {},
       stats: null as never,
@@ -189,45 +191,7 @@ function updateHero(s: SimState, h: Hero, inp: HeroInput, dt: number): void {
   h.sinceFire += dt;
   if (!h.alive) return;
 
-  // Supers in flight own the body.
-  if (h.leap) {
-    const L = h.leap;
-    L.t += dt;
-    const f = Math.min(1, L.t / L.dur);
-    h.x = L.sx + (L.tx - L.sx) * f;
-    h.y = L.sy + (L.ty - L.sy) * f;
-    if (f >= 1) {
-      h.leap = null;
-      const p = freeSpot(s.arena, h.x, h.y, h.r);
-      h.x = p.x;
-      h.y = p.y;
-      const dmg = 70 * (1 + 0.15 * (s.floor - 1));
-      explode(s, h.x, h.y, 120, dmg, 0, h.index, 620, '#d8e8ff');
-      effect(s, 'ring', h.x, h.y, 140, '#ffffff', 0.4);
-      s.shake = 0.4;
-      s.sounds.push('stomp');
-    }
-    return;
-  }
-  if (h.dash) {
-    const D = h.dash;
-    D.t -= dt;
-    const before = { x: h.x, y: h.y };
-    moveCircle(s.arena, h, h.r, D.dx * 820 * dt, D.dy * 820 * dt);
-    effect(s, 'dash', before.x, before.y, 14, 'rgba(40,40,44,0.7)', 0.5, h.x, h.y);
-    for (const e of s.enemies) {
-      if (e.dead || D.hit.includes(e.id)) continue;
-      if (Math.hypot(e.x - h.x, e.y - h.y) < e.r + h.r + 14) {
-        D.hit.push(e.id);
-        hurtEnemy(s, e, 55 * (1 + 0.15 * (s.floor - 1)), { owner: h.index, element: 'none', legend: null, x: h.x, y: h.y, kb: 300, proc: false });
-      }
-    }
-    if (D.t <= 0) {
-      h.dash = null;
-      s.zones.push({ id: newId(s), kind: 'soot', team: 0, owner: h.index, x: h.x, y: h.y, r: 90, dps: 0, life: 4, maxLife: 4 });
-    }
-    return;
-  }
+  if (flySuper(s, h, dt)) return;
 
   // Walk.
   const m = Math.hypot(inp.mx, inp.my);
@@ -271,23 +235,18 @@ function updateHero(s: SimState, h: Hero, inp: HeroInput, dt: number): void {
     tryAttack(s, sh, held, angle, reach);
   }
 
-  // Super.
-  if (inp.superFire && h.superCharge >= 1) {
+  // Super: a tap aims itself, a drag aims the dash and the leap.
+  if (h.superCharge >= 1) {
     const sl = Math.hypot(inp.superAimX, inp.superAimY);
-    let angle = h.facing;
-    let reach = 0.8;
-    if (sl > 0.2) {
-      angle = Math.atan2(inp.superAimY, inp.superAimX);
-      reach = sl;
-    } else {
-      const tgt = nearestTarget(s, h.x, h.y, 320, h.def.super === 'leap');
-      if (tgt) {
-        angle = Math.atan2(tgt.y - h.y, tgt.x - h.x);
-        reach = Math.min(1, Math.hypot(tgt.x - h.x, tgt.y - h.y) / 300);
-      }
+    const drag = (inp.superAiming || inp.superFire) && sl > 0.2 && (h.def.super === 'dash' || h.def.super === 'leap');
+    h.superPlan = planSuper(s, h, drag ? { x: inp.superAimX, y: inp.superAimY } : null);
+    if (inp.superFire) {
+      h.superCharge = 0;
+      h.afterburn = 2 * cogLevel(h, 'jalkipolte');
+      doSuper(s, h, h.superPlan);
+      h.superPlan.on = false;
     }
-    doSuper(s, h, angle, reach);
-  }
+  } else h.superPlan.on = false;
 
   // Swap. A press during a burst waits for the burst to end rather than
   // being lost; a second press before then takes it back.
@@ -323,39 +282,6 @@ function updateHero(s: SimState, h: Hero, inp: HeroInput, dt: number): void {
   // Brawl-style recovery: out of the fight for a while, health comes back.
   h.calm = h.hurtFlash > 0.15 ? 0 : h.calm + dt;
   if (h.sinceFire > 3 && h.calm > 3 && h.hp < h.stats.maxHp) h.hp = Math.min(h.stats.maxHp, h.hp + h.stats.maxHp * 0.07 * dt);
-}
-
-function doSuper(s: SimState, h: Hero, angle: number, reach: number): void {
-  h.superCharge = 0;
-  h.afterburn = 2 * cogLevel(h, 'jalkipolte');
-  s.sounds.push('super');
-  switch (h.def.super) {
-    case 'dash':
-      h.dash = { t: 0.24, dx: Math.cos(angle), dy: Math.sin(angle), hit: [] };
-      h.invuln = 0.4;
-      break;
-    case 'leap': {
-      const dist = 80 + 230 * reach;
-      const tx = Math.max(T * 1.5, Math.min((s.arena.w - 1.5) * T, h.x + Math.cos(angle) * dist));
-      const ty = Math.max(T * 1.5, Math.min((s.arena.h - 1.5) * T, h.y + Math.sin(angle) * dist));
-      h.leap = { sx: h.x, sy: h.y, tx, ty, t: 0, dur: 0.6 };
-      break;
-    }
-    case 'turret': {
-      const x = h.x + Math.cos(angle) * 30;
-      const y = h.y + Math.sin(angle) * 30;
-      const g = h.guns[h.active].gun;
-      s.turrets.push({ id: newId(s), owner: h.index, x, y, held: hold(g), life: 9, facing: angle });
-      effect(s, 'ring', x, y, 40, '#e8c95a', 0.4);
-      break;
-    }
-    case 'slam':
-      explode(s, h.x, h.y, 130, 60 * (1 + 0.15 * (s.floor - 1)), 0, h.index, 700, '#ffd8a0');
-      effect(s, 'ring', h.x, h.y, 160, '#ffe0b0', 0.5);
-      h.shield = 3;
-      s.shake = 0.45;
-      break;
-  }
 }
 
 function takeGun(s: SimState, h: Hero, dropId: number): void {

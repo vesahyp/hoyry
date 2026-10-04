@@ -16,8 +16,10 @@ game follows your browser's language.*
 lähintä näkyvää vihollista, veto näyttää tähtäysviivan ja laukaisee kun
 nostat sormen. Tähtinappi oikeassa reunassa on supervoima: se täyttyy
 osumista, ja sama keltainen palkki näkyy hahmon yllä. Kun se on täynnä,
-hahmon ympärillä hehkuu rengas ja pilli soi. Napautus tai veto kuten
-aseella. Kun sinulla on kaksi asetta, ⇄-nappi tähden vieressä vaihtaa
+hahmon ympärillä hehkuu rengas ja pilli soi. Napautus tähtää itse:
+supervoima osuu parhaaseen kohteeseen tai joukkoon, ja kultainen tähtäin
+näyttää sen jo ennen napautusta. Syöksyn ja hypyn voi myös vetää, ja veto
+lukittuu lähimpään viholliseen vedon suunnassa. Kun sinulla on kaksi asetta, ⇄-nappi tähden vieressä vaihtaa
 asetta yhdellä napautuksella, ja se näyttää aseen johon vaihdat. Myös
 vasemman yläkulman asetaskua voi napauttaa. Kortti-nappi ottaa aseen jonka
 päällä seisot.
@@ -92,10 +94,10 @@ Mitä vihollinen ampui sinua, sen saat kun se kaatuu.
 
 | Sankari | Aloitusase | Supervoima |
 |---------|------------|------------|
-| Nuohooja | haulikko (Paukku & Poika) | Nokisyöksy: syöksy, osuu matkalla, jättää nokipilven |
-| Konemestari | revolveri (Rattaanpää) | Tykkitorni: oma torni ampuu samalla aseella kahdeksan sekuntia |
-| Ilmalaivuri | mörssäri (Torpeedo) | Ilmahyppy: hyppää tähtäämääsi ja laskeutuu iskuun |
-| Seppä | höyrykeihäs (Kipinä) | Alasin: isku heittää viholliset kauas, sitten suoja |
+| Nuohooja | haulikko (Paukku & Poika) | Nokisyöksy: syöksy kohteen läpi, osuu matkalla, noki räjähtää perillä ja jättää pilven |
+| Konemestari | revolveri (Rattaanpää) | Tykkitorni: oma torni ampuu samalla aseella yhdeksän sekuntia |
+| Ilmalaivuri | mörssäri (Torpeedo) | Ilmahyppy: hyppää suurimman joukon keskelle ja laskeutuu iskuun |
+| Seppä | höyrykeihäs (Kipinä) | Alasin: loikka joukon keskelle, isku heittää viholliset kauas, sitten suoja |
 
 ## Tehdas
 
@@ -132,7 +134,10 @@ shot you with.
 can see, drag shows an aim line and fires on release. The star button on
 the right edge is your super. Hits charge it, and the same yellow bar shows
 over your hero; when it is full a ring glows round the hero and a whistle
-blows. Same tap-or-drag control. With two guns, the ⇄ button beside the
+blows. A tap aims it for you: the super goes for the best enemy or group
+in reach, and a gold sight shows where before you tap. The dash and the
+leap can also be dragged, and a drag locks onto the nearest enemy near
+its line. With two guns, the ⇄ button beside the
 star swaps with one tap and shows the gun you swap to. The gun slots at the
 top left still swap on a tap too. The card button takes the gun you are
 standing on.
@@ -164,9 +169,10 @@ and break a rule: the Coffee Pot heals you, the Cuckoo Clock's sixth shot
 will not give up, Granny's Umbrella blocks shots while you hold your fire,
 and four more.
 
-**Heroes:** the Sweep (scattergun, dashes through a soot cloud), the
-Engineer (revolver, drops a turret), the Aeronaut (mortar, leaps and
-stomps), the Smith (steam lance, slams and shields).
+**Heroes:** the Sweep (scattergun, dashes through the target and bursts
+into soot), the Engineer (revolver, drops a turret), the Aeronaut (mortar,
+leaps onto a group and stomps), the Smith (steam lance, hops in, slams and
+shields).
 
 **The works fight back too:** weeds hide you until you fire, crates break,
 barrels explode and chain, steam vents scald on a timer, and the rapids

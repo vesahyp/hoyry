@@ -41,6 +41,9 @@ src/
                          (Shooter), projectile flight, zones
     combat.ts            hurtEnemy, hurtHero, explode, kills, drops
     upgrades.ts          hero stats from cogs, cog offers
+    supers.ts            the four supers: their numbers, the auto-aim
+                         (planSuper, every step while charged) and the
+                         dash, leap and hop in flight
     content/
       heroes.ts          the four playable heroes, their super and passive
       enemies.ts         the works' cast, bosses, elite affixes
@@ -66,9 +69,12 @@ src/
 tools/
   sim-check.ts           npm run sim-check: gun table + assertions
   balance.ts             npm run balance: bot runs, one line per run
+  supers.ts            npm run supers: each super in bot fights + the lab
+  lab.ts               the super lab: open room, dummies, one press
   autoplayer.ts          the bot both tools use
   dbg/stuck.ts           map dump for a stuck floor; not committed
 scripts/shots.mjs        npm run shots: Playwright, iPhone 15, ?bot=1&speed=3
+scripts/super-check.mjs  make super-check: each super tapped in a fight hits
 ```
 
 ## Rules
@@ -109,8 +115,9 @@ scripts/shots.mjs        npm run shots: Playwright, iPhone 15, ?bot=1&speed=3
 ## Workflow
 
 - `make dev` (http://localhost:5173, also on the LAN for a phone).
-- **Before committing:** `make check` (typecheck, build, `sim-check`) must
-  pass. `sim-check` prints the gun table first; read it when you touched a
+- **Before committing:** `make check` (typecheck, build, `sim-check`,
+  `super-check`) must pass. `super-check` drives an emulated iPhone, so
+  it needs `make shots-setup` once. `sim-check` prints the gun table first; read it when you touched a
   gun maker, type or rarity curve.
 - **Balance with `make balance [FLOORS=10] [RUNS=2] [HERO=]`.** The bot
   kites and takes better guns but has no plan. A change that moves the

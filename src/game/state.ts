@@ -61,7 +61,10 @@ export interface Hero {
   active: number;
   superCharge: number;
   dash: { t: number; dx: number; dy: number; hit: number[] } | null;
-  leap: { sx: number; sy: number; tx: number; ty: number; t: number; dur: number } | null;
+  /** a body in the air: the aeronaut's leap, or the smith's hop before the slam */
+  leap: { sx: number; sy: number; tx: number; ty: number; t: number; dur: number; lift: number; then: 'stomp' | 'slam' } | null;
+  /** where a tap on the super would go now; on only while it is charged */
+  superPlan: SuperPlan;
   shield: number;
   cogs: Record<string, number>;
   stats: HeroStats;
@@ -83,6 +86,19 @@ export interface Hero {
   near: number | null;
   /** the aim the UI shows: last aim stick state, for the renderer */
   aimShow: { x: number; y: number; on: boolean; superOn: boolean; sx: number; sy: number };
+}
+
+/** A super's aim, from `planSuper` (supers.ts). */
+export interface SuperPlan {
+  on: boolean;
+  angle: number;
+  /** the dash's length; for the others, how far (x, y) is */
+  dist: number;
+  /** the marker: the dash's target, a landing spot, the turret's group */
+  x: number;
+  y: number;
+  /** the enemy it locked on, or -1 when nothing was in reach */
+  locked: number;
 }
 
 export interface Banner {

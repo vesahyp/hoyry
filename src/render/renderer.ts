@@ -4,6 +4,7 @@ import { ELEMENT_COLOR, MAKER_INFO, RARITY_COLOR } from '../game/guns';
 import { hash2 } from '../game/rng';
 import type { Hero, SimState } from '../game/state';
 import type { Enemy, Projectile } from '../game/types';
+import { DASH, LEAP, SLAM, TURRET } from '../game/supers';
 import { maxAmmo } from '../game/weapons';
 import { bossSprite, blit, coinSprite, enemySprite, gunSprite, heroSprite, liftSprite, setSpriteResolution, steamSprite, turretSprite } from './sprites';
 
@@ -571,6 +572,10 @@ export class Renderer {
           ctx.stroke();
           break;
         }
+        case 'target':
+          // The super locked on: a reticle that closes on the spot.
+          reticle(ctx, ef.x, ef.y, ef.r * (0.8 + f * 0.8), (1 - f) * 2, hexA(ef.color, f));
+          break;
         case 'dash':
           ctx.strokeStyle = hexA('#202024', f * 0.7);
           ctx.lineWidth = ef.r * 2 * f;
@@ -807,7 +812,7 @@ export class Renderer {
       ctx.globalAlpha = 1;
       return;
     }
-    const lift = h.leap ? Math.sin((h.leap.t / h.leap.dur) * Math.PI) * 60 : 0;
+    const lift = h.leap ? Math.sin((h.leap.t / h.leap.dur) * Math.PI) * h.leap.lift : 0;
     const frame = h.moving ? 1 + (Math.floor(h.walk) % 2) : 0;
     const faceLeft = Math.cos(h.facing) < -0.1;
     const y = h.y - lift;
@@ -847,7 +852,7 @@ export class Renderer {
   }
 
   private heroBars(ctx: CanvasRenderingContext2D, s: SimState, h: Hero): void {
-    const lift = h.leap ? Math.sin((h.leap.t / h.leap.dur) * Math.PI) * 60 : 0;
+    const lift = h.leap ? Math.sin((h.leap.t / h.leap.dur) * Math.PI) * h.leap.lift : 0;
     const x = h.x;
     const y = h.y - 40 - lift;
     const w = 40;
@@ -944,50 +949,60 @@ export class Renderer {
         ctx.stroke();
       }
     }
-    if (show.superOn) {
-      const an = Math.atan2(show.sy, show.sx);
-      const reach = Math.max(0.2, Math.min(1, Math.hypot(show.sx, show.sy)));
-      ctx.strokeStyle = 'rgba(255,210,60,0.85)';
-      ctx.fillStyle = 'rgba(255,210,60,0.2)';
+    // The super's plan, while it is charged: where a tap lands. Faint
+    // while the thumb is elsewhere, bright while it drags the button.
+    const plan = h.superPlan;
+    if (plan.on) {
+      const k = show.superOn ? 1 : 0.7;
+      ctx.strokeStyle = `rgba(255,210,60,${0.85 * k})`;
+      ctx.fillStyle = `rgba(255,210,60,${0.2 * k})`;
       ctx.lineWidth = 2.5;
       switch (h.def.super) {
         case 'dash': {
-          const len = 820 * 0.24;
+          const w = h.r + DASH.width;
           ctx.save();
           ctx.translate(h.x, h.y);
-          ctx.rotate(an);
-          ctx.fillRect(0, -14, len, 28);
-          ctx.strokeRect(0, -14, len, 28);
+          ctx.rotate(plan.angle);
+          ctx.fillRect(0, -w, plan.dist, w * 2);
+          ctx.strokeRect(0, -w, plan.dist, w * 2);
+          ctx.setLineDash([5, 6]);
+          ctx.beginPath();
+          ctx.arc(plan.dist, 0, DASH.burstR, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
           ctx.restore();
           break;
         }
-        case 'leap': {
-          const dist = 80 + 230 * reach;
-          const tx = h.x + Math.cos(an) * dist;
-          const ty = h.y + Math.sin(an) * dist;
+        case 'leap':
           ctx.beginPath();
           ctx.moveTo(h.x, h.y);
-          ctx.quadraticCurveTo((h.x + tx) / 2, (h.y + ty) / 2 - 90, tx, ty);
+          ctx.quadraticCurveTo((h.x + plan.x) / 2, (h.y + plan.y) / 2 - 90, plan.x, plan.y);
           ctx.stroke();
           ctx.beginPath();
-          ctx.arc(tx, ty, 120, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-          break;
-        }
-        case 'turret':
-          ctx.beginPath();
-          ctx.arc(h.x + Math.cos(an) * 30, h.y + Math.sin(an) * 30, 14, 0, Math.PI * 2);
+          ctx.arc(plan.x, plan.y, LEAP.r, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
           break;
         case 'slam':
+          if (plan.dist > 8) {
+            ctx.beginPath();
+            ctx.moveTo(h.x, h.y);
+            ctx.lineTo(plan.x, plan.y);
+            ctx.stroke();
+          }
           ctx.beginPath();
-          ctx.arc(h.x, h.y, 130, 0, Math.PI * 2);
+          ctx.arc(plan.x, plan.y, SLAM.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          break;
+        case 'turret':
+          ctx.beginPath();
+          ctx.arc(h.x + Math.cos(plan.angle) * TURRET.ahead, h.y + Math.sin(plan.angle) * TURRET.ahead, 14, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
           break;
       }
+      if (plan.locked >= 0) reticle(ctx, plan.x, plan.y, 20 + Math.sin(this.t * 8) * 2, this.t, '#ffd23c');
     }
     void s;
   }
@@ -1211,6 +1226,22 @@ function nearestHero(s: SimState, e: Enemy): Hero | null {
     }
   }
   return best;
+}
+
+/** A gun-sight ring with four ticks, turned by `turn` radians. */
+function reticle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, turn: number, color: string): void {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  for (let i = 0; i < 4; i++) {
+    const a = turn + (i * Math.PI) / 2;
+    ctx.moveTo(x + Math.cos(a) * (r - 6), y + Math.sin(a) * (r - 6));
+    ctx.lineTo(x + Math.cos(a) * (r + 7), y + Math.sin(a) * (r + 7));
+  }
+  ctx.stroke();
 }
 
 function hexA(hex: string, a: number): string {

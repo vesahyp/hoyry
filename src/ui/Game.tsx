@@ -447,8 +447,8 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
           </div>
           <p className="help">
             {tr(
-              'Vasen peukalo kävelee. Oikea peukalo: napauta niin ase ampuu lähintä, vedä niin näet suunnan ja ammut kun nostat. Tähti on supervoima: se latautuu osumista. ⇄ tähden vieressä vaihtaa asetta. Näppäimistöllä WASD, hiiri tähtää ja ampuu, välilyönti on supervoima, Q, hiiren rulla tai 1 ja 2 vaihtavat asetta, E ottaa aseen maasta.',
-              'Left thumb walks. Right thumb: tap and the gun fires at the nearest enemy, drag to see the line and fire when you lift. The star is your super: hits charge it. The ⇄ beside it swaps guns. On a keyboard WASD walks, the mouse aims and fires, space is the super, Q, the scroll wheel or 1 and 2 swap guns, E takes a gun from the floor.',
+              'Vasen peukalo kävelee. Oikea peukalo: napauta niin ase ampuu lähintä, vedä niin näet suunnan ja ammut kun nostat. Tähti on supervoima: se latautuu osumista, ja napautus tähtää sen itse. ⇄ tähden vieressä vaihtaa asetta. Näppäimistöllä WASD, hiiri tähtää ja ampuu, välilyönti on supervoima, Q, hiiren rulla tai 1 ja 2 vaihtavat asetta, E ottaa aseen maasta.',
+              'Left thumb walks. Right thumb: tap and the gun fires at the nearest enemy, drag to see the line and fire when you lift. The star is your super: hits charge it, and a tap aims it for you. The ⇄ beside it swaps guns. On a keyboard WASD walks, the mouse aims and fires, space is the super, Q, the scroll wheel or 1 and 2 swap guns, E takes a gun from the floor.',
             )}
           </p>
         </div>

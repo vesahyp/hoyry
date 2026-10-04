@@ -22,6 +22,8 @@ export interface HitSource {
   kb: number;
   /** a status hit (burn tick, chain) does not proc other on-hit rules */
   proc: boolean;
+  /** false for a super's own hits: they do not charge the super */
+  charge?: boolean;
 }
 
 export function cogLevel(h: Hero | undefined, id: string): number {
@@ -81,13 +83,13 @@ export function hurtEnemy(s: SimState, e: Enemy, dmg: number, src: HitSource): v
     e.kx += (dx / d) * src.kb * resist;
     e.ky += (dy / d) * src.kb * resist;
   }
-  if (h) {
+  if (h && src.charge !== false) {
     // The super fills from damage dealt, by the hero's rate.
     const was = h.superCharge;
     h.superCharge = Math.min(1, h.superCharge + (dmg / 520) * h.stats.superRate);
     if (was < 1 && h.superCharge >= 1) s.sounds.push('superready');
-    if (src.legend === 'kahvipannu') heal(s, h, dmg * 0.22);
   }
+  if (h && src.legend === 'kahvipannu') heal(s, h, dmg * 0.22);
   // Statuses: the gun's element and the cogs.
   const fire = src.element === 'fire' || (src.proc && cogLevel(h, 'tuli') > 0);
   if (fire) {
@@ -177,7 +179,7 @@ export function hurtHero(s: SimState, h: Hero, dmg: number, x: number, y: number
  * A blast: hurts the other team in the radius, breaks crates, sets off
  * barrels. Team -1 (a barrel) hurts everyone.
  */
-export function explode(s: SimState, x: number, y: number, r: number, dmg: number, team: Team | -1, owner: number, kb = 260, color = '#ffb040'): void {
+export function explode(s: SimState, x: number, y: number, r: number, dmg: number, team: Team | -1, owner: number, kb = 260, color = '#ffb040', charge = true): void {
   effect(s, 'blast', x, y, r, color, 0.4);
   s.shake = Math.max(s.shake, Math.min(0.35, r / 300));
   s.sounds.push('boom');
@@ -192,7 +194,7 @@ export function explode(s: SimState, x: number, y: number, r: number, dmg: numbe
     for (const e of s.enemies) {
       if (e.dead) continue;
       const d = Math.hypot(e.x - x, e.y - y);
-      if (d < r + e.r) hurtEnemy(s, e, dmg * (d < r * 0.5 ? 1 : 0.7), { owner, element: 'none', legend: null, x, y, kb, proc: false });
+      if (d < r + e.r) hurtEnemy(s, e, dmg * (d < r * 0.5 ? 1 : 0.7), { owner, element: 'none', legend: null, x, y, kb, proc: false, charge });
     }
   }
   // Tiles in the radius.

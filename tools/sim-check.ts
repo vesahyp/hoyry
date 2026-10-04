@@ -21,6 +21,7 @@ import type { Enemy } from '../src/game/types';
 import { fireBursts, tryAttack, type Shooter } from '../src/game/weapons';
 import { t } from '../src/i18n';
 import { botInput } from './autoplayer';
+import { LAYOUTS, lab } from './lab';
 
 let fails = 0;
 const check = (name: string, ok: boolean, extra = '') => {
@@ -235,7 +236,23 @@ function checkDeterminism(): void {
   check('the same seed and bot input replay identically after 60s', a === b, a === b ? a : `${a} vs ${b}`);
 }
 
+/** Every super, tapped, hits: one enemy near, a pack, and a pack past a nearer lone enemy. A drag near an enemy snaps to it. */
+function checkSupers(): void {
+  const bad: string[] = [];
+  for (const id of Object.keys(HERO_BY_ID)) {
+    if (lab(id, LAYOUTS['one@100']).hits < 1) bad.push(`${id} one@100`);
+    if (lab(id, LAYOUTS['pack@150']).hits < 3) bad.push(`${id} pack@150`);
+    if (lab(id, LAYOUTS['one+pack']).hits < 3) bad.push(`${id} one+pack`);
+  }
+  check('every super, tapped, hits an enemy near and most of a pack', bad.length === 0, bad.join(', '));
+  const off = { x: Math.cos(0.4), y: Math.sin(0.4) };
+  const snapped = ['nuohooja', 'ilmalaivuri'].filter((id) => lab(id, LAYOUTS['one@100'], off).hits < 1);
+  check('a dash or leap dragged 23 degrees off an enemy snaps to it', snapped.length === 0, snapped.join(', '));
+  check('a dash dragged away from the only enemy goes away from it', lab('nuohooja', LAYOUTS['one@100'], { x: -1, y: 0 }).hits === 0);
+}
+
 function assertions(): void {
+  checkSupers();
   checkDeterminism();
   checkArenas();
   checkEnemySpawnsNotSolid();

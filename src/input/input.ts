@@ -151,7 +151,9 @@ export class InputController {
         if (st.touchId !== t.identifier) continue;
         st.x = t.clientX;
         st.y = t.clientY;
-        if (Math.hypot(st.x - st.cx, st.y - st.cy) > 16) st.dragged = true;
+        // The super button takes a longer drag: a thumb that slides a
+        // little on a tap in a fight should still get the auto-aim.
+        if (Math.hypot(st.x - st.cx, st.y - st.cy) > (st === this.sup ? 30 : 16)) st.dragged = true;
       }
     }
     e.preventDefault();

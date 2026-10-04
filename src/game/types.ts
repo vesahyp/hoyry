@@ -202,7 +202,7 @@ export interface FloatText {
 
 /** Short-lived drawn things with no rules: blasts, sparks, muzzle flash. */
 export interface Effect {
-  kind: 'blast' | 'spark' | 'muzzle' | 'puff' | 'ring' | 'chain' | 'telegraph' | 'debris' | 'dash';
+  kind: 'blast' | 'spark' | 'muzzle' | 'puff' | 'ring' | 'chain' | 'telegraph' | 'debris' | 'dash' | 'target';
   x: number;
   y: number;
   x2: number;
