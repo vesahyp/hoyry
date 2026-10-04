@@ -49,6 +49,21 @@ interface Hud {
 
 type Overlay = { kind: 'none' } | { kind: 'cogs'; offers: CogDef[]; left: number } | { kind: 'pause' };
 
+/** A button that throws the run away: the first tap arms it, a second tap within a few seconds does it. */
+function ConfirmButton({ className, label, sure, onConfirm }: { className: string; label: string; sure: string; onConfirm: () => void }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const id = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(id);
+  }, [armed]);
+  return (
+    <button className={armed ? `${className} danger` : className} onClick={() => (armed ? onConfirm() : setArmed(true))}>
+      {armed ? sure : label}
+    </button>
+  );
+}
+
 export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroDef[]; seed: number; onEnd: (r: RunSummary) => void; onQuit: () => void; onRestart: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -464,12 +479,8 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
             <button className="btn primary" onClick={() => setOverlay({ kind: 'none' })}>
               {tr('Jatka', 'Resume')}
             </button>
-            <button className="btn" onClick={onRestart}>
-              {tr('Alusta', 'Restart')}
-            </button>
-            <button className="btn ghost" onClick={onQuit}>
-              {tr('Lopeta', 'Quit')}
-            </button>
+            <ConfirmButton className="btn" label={tr('Alusta', 'Restart')} sure={tr('Alusta varmasti?', 'Really restart?')} onConfirm={onRestart} />
+            <ConfirmButton className="btn ghost" label={tr('Lopeta', 'Quit')} sure={tr('Lopeta varmasti?', 'Really quit?')} onConfirm={onQuit} />
           </div>
           <p className="help">
             {tr(
