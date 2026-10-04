@@ -3,9 +3,9 @@ import { BUSH, T, flowDir, freeSpot, generateArena, lineOfSight, moveCircle, ope
 import { cogLevel, effect, explode, heal, hurtEnemy, hurtHero, killEnemy, nearestTarget, newId, text } from './combat';
 import { AFFIXES, BOSSES, ENEMIES } from './content/enemies';
 import type { HeroDef } from './content/heroes';
-import { hold, rollGun, MAKER_INFO, RARITY_COLOR } from './guns';
+import { hold, rollGun, MAKERS, MAKER_INFO, RARITY_COLOR } from './guns';
 import { createState, type Hero, type HeroInput, type SimState } from './state';
-import type { Enemy, Held } from './types';
+import type { Enemy, Gun, GunType, Held, Maker } from './types';
 import { doSuper, flySuper, planSuper } from './supers';
 import { computeStats } from './upgrades';
 import { fireBursts, maxAmmo, tickHeld, tryAttack, updateProjectiles, updateZones, type Shooter } from './weapons';
@@ -428,9 +428,22 @@ function spawnEnemy(s: SimState, m: SimState['marks'][number]): void {
     touch *= af.dmg;
   }
   if (m.elite.length) hp *= 2.6;
-  const held = d.gun ? hold(rollGun(s.rng, s.floor, 0, d.gun)) : null;
+  const held = d.gun ? hold(rollEnemyGun(s, d.gun)) : null;
   s.enemies.push(makeEnemy(s, d.id, m.x, m.y, r, hp, speed * s.rng.range(0.92, 1.08), d.behaviour, touch, held, m.elite, false));
   effect(s, 'puff', m.x, m.y, r * 2.5, 'rgba(220,220,220,0.7)', 0.5);
+}
+
+/**
+ * An enemy's gun is any maker, with one limit: a clockwork (homing) gun
+ * comes only from floor 3, and only one gunner at a time carries one. Two
+ * shots curving after you from two sides is what no sidestep answers.
+ */
+function rollEnemyGun(s: SimState, want: { type: GunType; maker?: Maker }): Gun {
+  const g = rollGun(s.rng, s.floor, 0, want);
+  if (g.homing <= 0) return g;
+  const another = s.enemies.some((e) => !e.dead && e.held !== null && e.held.gun.homing > 0);
+  if (s.floor >= 3 && !another) return g;
+  return rollGun(s.rng, s.floor, 0, { ...want, maker: s.rng.pick(MAKERS.filter((m) => m !== 'kello')) });
 }
 
 function makeEnemy(s: SimState, kind: string, x0: number, y0: number, r: number, hp: number, speed: number, behaviour: Enemy['behaviour'], touch: number, held: Held | null, elite: string[], boss: boolean): Enemy {
