@@ -35,6 +35,39 @@ try {
   await page.waitForTimeout(300);
   check((await page.evaluate(() => window.__sim.heroes[0].superCharge)) === 0, 'a tap on the super button fires the super');
 
+  // A second gun: the swap button beside the super swaps on one tap, the
+  // move stick still held, and a swap pressed mid-burst is not lost.
+  check((await page.locator('.swapbtn').count()) === 0, 'no swap button with one gun');
+  await page.evaluate(() => {
+    const h = window.__sim.heroes[0];
+    h.guns.push({ ...h.guns[0], gun: { ...h.guns[0].gun, id: -1 } });
+  });
+  await page.waitForTimeout(300);
+  const sw = await page.locator('.swapbtn').boundingBox();
+  check(sw && sw.width >= 56 && sw.height >= 56, 'the swap button is at least 56 px');
+  const cdp = await page.context().newCDPSession(page);
+  const pt = (id, x, y) => ({ x, y, id, radiusX: 10, radiusY: 10, force: 1 });
+  const stick = pt(1, 60, 560);
+  const btn = pt(2, sw.x + sw.width / 2, sw.y + sw.height / 2);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [stick] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ ...stick, x: 90 }] });
+  await page.waitForTimeout(100);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ ...stick, x: 90 }, btn] });
+  // CDP releases a touch by leaving it out of the next event's list.
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ ...stick, x: 91 }] });
+  await page.waitForTimeout(200);
+  const st = await page.evaluate(() => ({ active: window.__sim.heroes[0].active, moving: window.__sim.heroes[0].moving }));
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  check(st.active === 1 && st.moving, 'a tap on the swap button swaps while the left thumb walks');
+  await page.evaluate(() => (window.__sim.heroes[0].guns[1].burstLeft = 99));
+  await page.locator('.swapbtn').tap();
+  await page.waitForTimeout(100);
+  const mid = await page.evaluate(() => window.__sim.heroes[0].active);
+  await page.evaluate(() => (window.__sim.heroes[0].guns[1].burstLeft = 0));
+  await page.waitForTimeout(100);
+  const after = await page.evaluate(() => window.__sim.heroes[0].active);
+  check(mid === 1 && after === 0, 'a swap pressed during a burst happens when the burst ends');
+
   // Skip the fight: clear the floor and stand the hero on the lift.
   await page.evaluate(() => {
     const s = window.__sim;

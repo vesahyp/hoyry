@@ -11,7 +11,8 @@ import { NO_INPUT, type HeroInput } from '../game/state';
  * marked `data-ui` (swap, take, pause) are left to React.
  *
  * Keyboard and mouse: WASD or arrows walk, the mouse aims, the left button
- * fires while held, right button or space for the super, Q swaps, E takes.
+ * fires while held, right button or space for the super, E takes. Q or the
+ * scroll wheel swaps guns; 1 and 2 pick a slot.
  *
  * Fire and super are edges: `read` returns them once and clears them.
  */
@@ -40,6 +41,8 @@ export class InputController {
   heroScreen = { x: 0, y: 0, scale: 1 };
   /** the active gun's range in world units, so the mouse distance sets a lob's reach */
   range = 300;
+  /** the active slot and how many guns are held, set by the game loop, so 1 and 2 know whether to swap */
+  slots = { active: 0, count: 1 };
   private keys = new Set<string>();
   private fireEdge = false;
   private superEdge = false;
@@ -47,6 +50,7 @@ export class InputController {
   private superAim = { x: 0, y: 0 };
   private swapEdge = false;
   private takeEdge = false;
+  private lastWheel = 0;
   private mouse = { x: 0, y: 0, down: false, seen: false };
   usedTouch = false;
   private el: HTMLElement | null = null;
@@ -58,6 +62,10 @@ export class InputController {
     if (e.type === 'keydown') {
       if (!this.keys.has(k)) {
         if (k === 'q') this.swapEdge = true;
+        if (k === '1' || k === '2') {
+          const n = Number(k) - 1;
+          if (n < this.slots.count && n !== this.slots.active) this.swapEdge = true;
+        }
         if (k === 'e' || k === 'f') this.takeEdge = true;
         if (k === ' ') this.fireSuperAtMouse();
       }
@@ -101,6 +109,16 @@ export class InputController {
     if (e.button === 0) this.mouse.down = false;
   };
   private onContext = (e: Event) => e.preventDefault();
+  /** One notch, either way, swaps. A trackpad sends a stream of small
+   * deltas for one flick, so a quiet gap is needed before the next swap. */
+  private onWheel = (e: WheelEvent) => {
+    if ((e.target as HTMLElement).closest('.overlay')) return;
+    e.preventDefault();
+    const now = performance.now();
+    const quiet = now - this.lastWheel > 250;
+    this.lastWheel = now;
+    if (quiet && Math.abs(e.deltaY) + Math.abs(e.deltaX) > 0) this.swapEdge = true;
+  };
 
   private onTouchStart = (e: TouchEvent) => {
     if ((e.target as HTMLElement).closest('[data-ui], button, .overlay')) return;
@@ -181,6 +199,7 @@ export class InputController {
     el.addEventListener('mousedown', this.onMouseDown);
     window.addEventListener('mouseup', this.onMouseUp);
     el.addEventListener('contextmenu', this.onContext);
+    el.addEventListener('wheel', this.onWheel, { passive: false });
     window.addEventListener('blur', this.onBlur);
   }
 
@@ -195,6 +214,7 @@ export class InputController {
     el.removeEventListener('mousedown', this.onMouseDown);
     window.removeEventListener('mouseup', this.onMouseUp);
     el.removeEventListener('contextmenu', this.onContext);
+    el.removeEventListener('wheel', this.onWheel);
     window.removeEventListener('blur', this.onBlur);
     this.el = null;
   }

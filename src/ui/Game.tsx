@@ -6,7 +6,7 @@ import { COG_BY_ID, type CogDef } from '../game/content/cogs';
 import { BOSSES } from '../game/content/enemies';
 import { rollCogs, applyCog } from '../game/upgrades';
 import { maxAmmo } from '../game/weapons';
-import { RARITY_COLOR } from '../game/guns';
+import { RARITY_COLOR, TYPE_NAME } from '../game/guns';
 import type { Gun } from '../game/types';
 import { Renderer } from '../render/renderer';
 import { InputController } from '../input/input';
@@ -177,6 +177,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
       // The mouse aims relative to where the hero is drawn.
       input.heroScreen = renderer.toScreen(h0.x, h0.y);
       input.range = h0.guns[h0.active].gun.range * h0.stats.rangeMul;
+      input.slots = { active: h0.active, count: h0.guns.length };
       hitStop = Math.max(0, hitStop - dt);
       ammoBlinkT = ammoBlinkT.map((t) => Math.max(0, t - dt));
       if (ov.kind === 'none' && !s.gameOver && hitStop <= 0) {
@@ -282,6 +283,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
   const s = simRef.current;
   const h0 = s?.heroes[0];
   const active = hud?.guns.find((g) => g.active)?.gun;
+  const other = hud && hud.guns.length > 1 ? hud.guns.find((g) => !g.active) : undefined;
 
   return (
     <div className="game" ref={rootRef}>
@@ -375,6 +377,30 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
         </div>
       )}
 
+      {/* The swap button: beside the super, under the right thumb, so a swap
+          mid-fight never means letting go of the move stick. It shows the gun
+          you swap to. Pointer down, not click: it acts on the touch itself. */}
+      {other && (
+        <button
+          className="swapbtn"
+          data-ui
+          style={{ borderColor: RARITY_COLOR[other.gun.rarity] }}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            inputRef.current?.swap();
+          }}
+          aria-label={tr(`Vaihda: ${t(other.gun.name)}`, `Swap to ${t(other.gun.name)}`)}
+        >
+          <span>⇄</span>
+          <small style={{ color: RARITY_COLOR[other.gun.rarity] }}>{t(TYPE_NAME[other.gun.type])}</small>
+          <div className="pips">
+            {Array.from({ length: other.max }, (_, k) => (
+              <i key={k} className={k < Math.floor(other.ammo) ? 'full' : ''} />
+            ))}
+          </div>
+        </button>
+      )}
+
       {/* the super button; touches on it are read by the input, not React */}
       <div ref={superRef} className={`superbtn ${hud && hud.superCharge >= 1 ? 'ready' : ''}`} style={{ ['--charge' as string]: `${Math.round((hud?.superCharge ?? 0) * 100)}%` }}>
         <span>★</span>
@@ -421,8 +447,8 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
           </div>
           <p className="help">
             {tr(
-              'Vasen peukalo kävelee. Oikea peukalo: napauta niin ase ampuu lähintä, vedä niin näet suunnan ja ammut kun nostat. Tähti on supervoima: se latautuu osumista. Näppäimistöllä WASD, hiiri tähtää ja ampuu, välilyönti on supervoima, Q vaihtaa asetta, E ottaa aseen maasta.',
-              'Left thumb walks. Right thumb: tap and the gun fires at the nearest enemy, drag to see the line and fire when you lift. The star is your super: hits charge it. On a keyboard WASD walks, the mouse aims and fires, space is the super, Q swaps guns, E takes a gun from the floor.',
+              'Vasen peukalo kävelee. Oikea peukalo: napauta niin ase ampuu lähintä, vedä niin näet suunnan ja ammut kun nostat. Tähti on supervoima: se latautuu osumista. ⇄ tähden vieressä vaihtaa asetta. Näppäimistöllä WASD, hiiri tähtää ja ampuu, välilyönti on supervoima, Q, hiiren rulla tai 1 ja 2 vaihtavat asetta, E ottaa aseen maasta.',
+              'Left thumb walks. Right thumb: tap and the gun fires at the nearest enemy, drag to see the line and fire when you lift. The star is your super: hits charge it. The ⇄ beside it swaps guns. On a keyboard WASD walks, the mouse aims and fires, space is the super, Q, the scroll wheel or 1 and 2 swap guns, E takes a gun from the floor.',
             )}
           </p>
         </div>

@@ -17,12 +17,15 @@ lähintä näkyvää vihollista, veto näyttää tähtäysviivan ja laukaisee ku
 nostat sormen. Tähtinappi oikeassa reunassa on supervoima: se täyttyy
 osumista, ja sama keltainen palkki näkyy hahmon yllä. Kun se on täynnä,
 hahmon ympärillä hehkuu rengas ja pilli soi. Napautus tai veto kuten
-aseella. Napauta asetaskua vaihtaaksesi asetta. Kortti-nappi ottaa
-aseen jonka päällä seisot.
+aseella. Kun sinulla on kaksi asetta, ⇄-nappi tähden vieressä vaihtaa
+asetta yhdellä napautuksella, ja se näyttää aseen johon vaihdat. Myös
+vasemman yläkulman asetaskua voi napauttaa. Kortti-nappi ottaa aseen jonka
+päällä seisot.
 
 **Näppäimistöllä:** WASD kävelee, hiiri tähtää ja ampuu klikillä (pidä
-pohjassa). Välilyönti tai hiiren oikea nappi on supervoima. Q vaihtaa asetta,
-E ottaa lattialla olevan aseen. Esc pysäyttää pelin.
+pohjassa). Välilyönti tai hiiren oikea nappi on supervoima. Q tai hiiren
+rulla vaihtaa asetta, 1 ja 2 valitsevat taskun. E ottaa lattialla olevan
+aseen. Esc pysäyttää pelin.
 
 ## Kierros
 
@@ -129,12 +132,14 @@ shot you with.
 can see, drag shows an aim line and fires on release. The star button on
 the right edge is your super. Hits charge it, and the same yellow bar shows
 over your hero; when it is full a ring glows round the hero and a whistle
-blows. Same tap-or-drag control. Tap a gun slot to
-swap. The card button takes the gun you are standing on.
+blows. Same tap-or-drag control. With two guns, the ⇄ button beside the
+star swaps with one tap and shows the gun you swap to. The gun slots at the
+top left still swap on a tap too. The card button takes the gun you are
+standing on.
 
 **Keyboard:** WASD walks, the mouse aims and fires on click (hold to keep
-firing). Space or right click is the super. Q swaps guns, E takes one off
-the floor. Esc pauses.
+firing). Space or right click is the super. Q or the scroll wheel swaps
+guns, 1 and 2 pick a slot. E takes one off the floor. Esc pauses.
 
 **The loop:** a floor is one arena with two or three waves of enemies. Kill
 the last one and the lift opens, never before. Ride it and pick one of
