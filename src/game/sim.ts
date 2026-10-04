@@ -52,6 +52,7 @@ export function newRun(seed: number, defs: HeroDef[]): SimState {
       sinceFire: 9,
       hidden: false,
       swapCd: 0,
+      swapQueued: false,
       valveUsed: false,
       afterburn: 0,
       hits: 0,
@@ -288,8 +289,11 @@ function updateHero(s: SimState, h: Hero, inp: HeroInput, dt: number): void {
     doSuper(s, h, angle, reach);
   }
 
-  // Swap.
-  if (inp.swap && h.guns.length > 1 && held.burstLeft <= 0) {
+  // Swap. A press during a burst waits for the burst to end rather than
+  // being lost; a second press before then takes it back.
+  if (inp.swap && h.guns.length > 1 && held.burstLeft > 0) h.swapQueued = !h.swapQueued;
+  else if ((inp.swap || h.swapQueued) && h.guns.length > 1 && held.burstLeft <= 0) {
+    h.swapQueued = false;
     h.active = 1 - h.active;
     const now = h.guns[h.active];
     now.lock = Math.max(now.lock, 0.15);
@@ -359,6 +363,7 @@ function takeGun(s: SimState, h: Hero, dropId: number): void {
   if (!d || !d.gun) return;
   const newHeld = hold(d.gun);
   newHeld.lock = 0.2;
+  h.swapQueued = false;
   s.run.guns++;
   s.run.bestRarity = Math.max(s.run.bestRarity, d.gun.rarity);
   if (h.guns.length < 2) {

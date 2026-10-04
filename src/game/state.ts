@@ -71,6 +71,8 @@ export interface Hero {
   sinceFire: number;
   hidden: boolean;
   swapCd: number;
+  /** a swap pressed during a burst, done when the burst ends */
+  swapQueued: boolean;
   valveUsed: boolean;
   afterburn: number;
   /** hits landed, for every-Nth-hit rules */
