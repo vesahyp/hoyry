@@ -371,9 +371,11 @@ export class Renderer {
       } else if (e.held) {
         const len = e.held.gun.type === 'mortar' ? 0 : Math.min(e.held.gun.range, 400);
         if (len) {
-          ctx.strokeStyle = 'rgba(255,70,50,0.5)';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([6, 6]);
+          // A clockwork gun telegraphs in brass: its shot will curve after you.
+          const clockwork = e.held.gun.homing > 0;
+          ctx.strokeStyle = clockwork ? 'rgba(232,201,90,0.75)' : 'rgba(255,70,50,0.5)';
+          ctx.lineWidth = clockwork ? 3 : 2;
+          ctx.setLineDash(clockwork ? [3, 7] : [6, 6]);
           ctx.beginPath();
           ctx.moveTo(e.x, e.y);
           ctx.lineTo(e.x + Math.cos(an) * len, e.y + Math.sin(an) * len);
@@ -1193,6 +1195,32 @@ export class Renderer {
   /** Enemy shots: big, red-ringed and dark in the middle, so they read against anything. */
   private enemyBullet(ctx: CanvasRenderingContext2D, p: Projectile): void {
     const pulse = 1 + 0.12 * Math.sin(this.t * 18 + p.id);
+    if (p.homing > 0) {
+      // A clockwork shot: brass, a gear ring, a tail along where it came from.
+      const sp = Math.hypot(p.vx, p.vy) || 1;
+      ctx.strokeStyle = 'rgba(232,201,90,0.55)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - (p.vx / sp) * p.r * 3.2, p.y - (p.vy / sp) * p.r * 3.2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(232,201,90,0.3)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 1.8 * pulse, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#e8c95a';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#4a3a1a';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 0.7, p.spin, p.spin + Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      return;
+    }
     ctx.fillStyle = 'rgba(255,60,30,0.3)';
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r * 1.7 * pulse, 0, Math.PI * 2);

@@ -216,6 +216,17 @@ class Audio {
         this.tone(1800, 0.1, { type: 'sawtooth', gain: 0.05, slide: 0.3 });
         this.burst(0.08, { gain: 0.08, hp: 3000 });
         break;
+      case 'tick':
+        // A clockwork shot leaves the gun: two ticks, so the ear knows which bullet will turn.
+        if (!this.allow(name, 80)) return;
+        this.tone(2200, 0.03, { type: 'square', gain: 0.05 });
+        this.tone(1700, 0.03, { type: 'square', gain: 0.05, delay: 0.07 });
+        break;
+      case 'clink':
+        if (!this.allow(name, 40)) return;
+        this.tone(2600 + r() * 400, 0.07, { type: 'triangle', gain: 0.06, slide: 0.6 });
+        this.burst(0.05, { gain: 0.08, hp: 2500 });
+        break;
       case 'ricochet':
         if (!this.allow(name, 60)) return;
         this.tone(2400 + r() * 800, 0.12, { type: 'sine', gain: 0.05, slide: 0.6 });

@@ -622,8 +622,9 @@ function updateEnemy(s: SimState, e: Enemy, dt: number): void {
           if (sh) tryAttack(s, sh, e.held!, Math.atan2(dy, dx), dist / g.range);
         }
       } else if (sees && e.modeT <= 0 && dist < g.range * (e.behaviour === 'mortar' ? 1 : 1.05) && e.held!.lock <= 0) {
+        // A clockwork gun winds up longer: its shot is the one to step away from.
         e.mode = 'windup';
-        e.modeT = e.behaviour === 'mortar' ? 0.25 : 0.4;
+        e.modeT = e.behaviour === 'mortar' ? 0.25 : g.homing > 0 ? 0.6 : 0.4;
       }
       break;
     }

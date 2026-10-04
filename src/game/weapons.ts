@@ -21,6 +21,17 @@ export interface Shooter {
   hero: Hero | null;
 }
 
+/**
+ * A clockwork (Kellosepät) shot in an enemy hand is fair only as long as a
+ * sidestep beats it. In your hand it turns at the gun's full rate; from an
+ * enemy it turns at most this fast (radians a second: at enemy bullet speed
+ * that is a turning circle wider than the hero's dodge), it flies straight
+ * for the last stretch (ENEMY_HOMING_OFF, px), it drops when its range is
+ * spent like any bullet, and your own shots break it in the air.
+ */
+export const ENEMY_HOMING = 1.4;
+export const ENEMY_HOMING_OFF = 72;
+
 export function maxAmmo(held: Held, hero: Hero | null): number {
   return held.gun.ammo + (hero ? hero.stats.extraAmmo : 0);
 }
@@ -133,6 +144,10 @@ function emitShot(s: SimState, sh: Shooter, held: Held, angle: number, reach: nu
     }
     const sp = g.type === 'lance' ? speed * s.rng.range(0.85, 1.1) : speed;
     const p = baseProjectile(s, sh, g, mx, my, a, sp, size, dmg, range * (g.type === 'lance' ? s.rng.range(0.8, 1.05) : 1));
+    if (enemy && p.homing > 0) {
+      p.homing = Math.min(p.homing, ENEMY_HOMING);
+      if (i === 0) s.sounds.push('tick');
+    }
     p.pierce = pierce;
     p.bounces = bounces;
     p.blast = blast;
@@ -184,6 +199,7 @@ function throwGun(s: SimState, sh: Shooter, held: Held, angle: number): void {
 
 export function updateProjectiles(s: SimState, dt: number): void {
   const a = s.arena;
+  const clockwork = s.projectiles.filter((p) => p.team === 1 && p.homing > 0 && !p.lob);
   for (const p of s.projectiles) {
     if (p.dead) continue;
     p.spin += dt * 14;
@@ -240,6 +256,16 @@ export function updateProjectiles(s: SimState, dt: number): void {
       continue;
     }
     if (p.team === 0) {
+      // A clockwork shot is a little machine: a hit breaks it, and the
+      // bullet that broke it flies on.
+      for (const c of clockwork) {
+        if (c.dead) continue;
+        const rr = c.r + p.r + 2;
+        if ((c.x - p.x) ** 2 + (c.y - p.y) ** 2 > rr * rr) continue;
+        c.dead = true;
+        effect(s, 'spark', c.x, c.y, 12, '#e8c95a', 0.2);
+        s.sounds.push('clink');
+      }
       for (const e of s.enemies) {
         if (e.dead || e.age < 0.3) continue;
         const rr = e.r + p.r;
@@ -318,6 +344,8 @@ function steer(s: SimState, p: Projectile, dt: number): void {
         found = true;
       }
     }
+    // The last stretch is straight, so a late sidestep is a dodge.
+    if (bd < ENEMY_HOMING_OFF * ENEMY_HOMING_OFF) return;
   }
   if (!found) return;
   const sp = Math.hypot(p.vx, p.vy);
