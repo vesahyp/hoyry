@@ -60,9 +60,11 @@ export interface Hero {
   guns: Held[];
   active: number;
   superCharge: number;
-  dash: { t: number; dx: number; dy: number; hit: number[] } | null;
+  dash: { t: number; dx: number; dy: number; hit: number[]; sx: number; sy: number } | null;
   /** a body in the air: the aeronaut's leap, or the smith's hop before the slam */
-  leap: { sx: number; sy: number; tx: number; ty: number; t: number; dur: number; lift: number; then: 'stomp' | 'slam' } | null;
+  leap: { sx: number; sy: number; tx: number; ty: number; t: number; dur: number; lift: number; then: 'stomp' | 'stomp2' | 'slam' } | null;
+  /** the Anvil's top level: seconds until the second slam, 0 for none */
+  aftershock: number;
   /** where a tap on the super would go now; on only while it is charged */
   superPlan: SuperPlan;
   shield: number;

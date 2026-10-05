@@ -41,9 +41,9 @@ src/
                          (Shooter), projectile flight, zones
     combat.ts            hurtEnemy, hurtHero, explode, kills, drops
     upgrades.ts          hero stats from cogs, cog offers
-    supers.ts            the four supers: their numbers, the auto-aim
-                         (planSuper, every step while charged) and the
-                         dash, leap and hop in flight
+    supers.ts            the four supers: their numbers by level
+                         (superNums), the auto-aim (planSuper, every step
+                         while charged) and the dash, leap and hop in flight
     content/
       heroes.ts          the four playable heroes, their super and passive
       enemies.ts         the works' cast, bosses, elite affixes

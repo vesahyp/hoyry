@@ -58,7 +58,7 @@ export const HEROES: HeroDef[] = [
     start: { type: 'revolver', maker: 'rattaat' },
     super: 'turret',
     superName: L('Tykkitorni', 'Turret'),
-    superDesc: L('Pystyttää tornin vihollisten suuntaan. Se ampuu samalla aseella kuin sinä yhdeksän sekuntia.', 'Sets down a turret facing the enemies. It fires the gun you hold for nine seconds.'),
+    superDesc: L('Pystyttää tornin vihollisten suuntaan. Se ampuu samalla aseella kuin sinä yhdeksän sekuntia. Kaksi tornia kerralla: kolmas korvaa vanhimman.', 'Sets down a turret facing the enemies. It fires the gun you hold for nine seconds. Two turrets at a time: a third replaces the oldest.'),
     passive: L('Lataa 15 % nopeammin.', 'Reloads 15% faster.'),
     reloadMul: 0.85,
     armor: 0,

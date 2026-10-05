@@ -138,6 +138,8 @@ h2 { margin: 0 0 12px; font-size: 24px; color: var(--brass); }
 .superbtn span, .superbtn small { position: relative; }
 .superbtn span { font-size: 30px; color: #6a5a3a; line-height: 1; }
 .superbtn small { font-size: 9px; font-weight: 800; color: var(--muted); max-width: 64px; text-align: center; line-height: 1.05; margin-top: 2px; }
+/* The super's level, the same medal as the guns', at the button's top left; a new level pops it. */
+.superbtn .glvl { position: absolute; left: -4px; top: -4px; width: 22px; height: 22px; font-size: 12px; }
 .superbtn.ready { opacity: 1; animation: superPulse 0.8s ease-in-out infinite alternate; }
 .superbtn.ready::before { background: radial-gradient(#ffe080, #d89a20); }
 .superbtn.ready span { color: #fff; text-shadow: 0 0 10px #fff; }
@@ -193,6 +195,8 @@ h2 { margin: 0 0 12px; font-size: 24px; color: var(--brass); }
 @keyframes cardIn { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
 .card:active, .card:hover { border-color: var(--brass); background: #4a3218; }
 .card.owned { border-color: rgba(138,224,112,0.5); }
+.card.supercog { border-color: rgba(255,208,64,0.6); }
+.card.supercog .ic { background: radial-gradient(#fff0b0, #ffd040 55%, #b07a18); }
 .card .ic { width: 50px; height: 50px; flex: none; border-radius: 50%; background: radial-gradient(#ffe080, #b07a18); color: #2a1800; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3), 0 0 0 3px #3a2408; }
 .card .body { flex: 1; min-width: 0; }
 .card .name { font-weight: 900; font-size: 17px; display: flex; justify-content: space-between; gap: 8px; }

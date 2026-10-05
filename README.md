@@ -111,6 +111,20 @@ Mitä vihollinen ampui sinua, sen saat kun se kaatuu.
 | Ilmalaivuri | mörssäri (Torpeedo) | Ilmahyppy: hyppää suurimman joukon keskelle ja laskeutuu iskuun |
 | Seppä | höyrykeihäs (Kipinä) | Alasin: loikka joukon keskelle, isku heittää viholliset kauas, sitten suoja |
 
+**Supervoimalla on tasot 1–5.** Hissillä tarjotaan muiden rattaiden
+joukossa oman supervoimasi ratasta, ja jokainen valinta nostaa sen tason.
+Taso näkyy tähtinapin kulmassa samassa messinkimitalissa kuin aseiden taso.
+
+| Supervoima | Taso 2 | Taso 3 | Taso 4 | Taso 5 |
+|------------|--------|--------|--------|--------|
+| Nokisyöksy | +35 % vahinkoa | pidempi (380) ja leveämpi | isompi pilvi, kestää 7 s | koko reitti jää nokeen, purkaus hidastaa |
+| Tykkitorni | kestää 13 s | täysi vahinko | kolme tornia kerralla | sammuva torni räjähtää |
+| Ilmahyppy | +35 % vahinkoa, hetki haavoittumaton perillä | laajempi (150), pidempi hyppy | hidastaa osuneet 2,5 s | ponnahtaa seuraavaan joukkoon |
+| Alasin | laajempi (160) | +35 % vahinkoa, suoja 5 s | tainnuttaa 0,8 s | jälkijäristys |
+
+Tykkitorneja seisoo kerralla enintään kaksi (tasolla 4 kolme): uusi korvaa
+vanhimman.
+
 ## Tehdas
 
 Viholliset näkevät ja väistävät, mutta tila itsessään on myös vastustaja.
@@ -212,6 +226,20 @@ clockwork gunner at a time, and none before floor 3.
 into soot), the Engineer (revolver, drops a turret), the Aeronaut (mortar,
 leaps onto a group and stomps), the Smith (steam lance, hops in, slams and
 shields).
+
+**Supers have levels 1 to 5.** On the lift, your own super's cog comes up
+among the others, and each pick raises it a level. The level sits at the
+corner of the star button in the same brass medal as the guns' levels.
+
+| Super | Level 2 | Level 3 | Level 4 | Level 5 |
+|-------|---------|---------|---------|---------|
+| Soot Dash | +35% damage | longer (380) and wider | bigger cloud, lasts 7 s | the whole run left in soot, the burst slows |
+| Turret | lasts 13 s | full damage | three turrets at a time | a turret that runs out explodes |
+| Sky Leap | +35% damage, a moment untouchable on landing | wider (150), longer leap | slows what it hits 2.5 s | bounces on to the next group |
+| Anvil | wider (160) | +35% damage, shield 5 s | stuns 0.8 s | an aftershock |
+
+At most two turrets stand at once (three at level 4): a new one replaces
+the oldest.
 
 **The works fight back too:** weeds hide you until you fire, crates break,
 barrels explode and chain, steam vents scald on a timer, and the rapids

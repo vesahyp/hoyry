@@ -25,13 +25,13 @@ export function computeStats(h: Hero): HeroStats {
   };
 }
 
-/** Three cogs to choose from on the lift. Ones you already have come up a little more often. */
+/** Three cogs to choose from on the lift. Ones you already have come up a little more often, and so does the hero's own super. */
 export function rollCogs(s: SimState, h: Hero, n = 3): CogDef[] {
-  const pool = COGS.filter((c) => (h.cogs[c.id] ?? 0) < c.max);
+  const pool = COGS.filter((c) => (h.cogs[c.id] ?? 0) < c.max && (!c.super || c.super === h.def.super));
   const out: CogDef[] = [];
   const rng = s.rng;
   while (out.length < n && pool.length) {
-    const pick = rng.weighted(pool, (c) => ((h.cogs[c.id] ?? 0) > 0 ? 1.4 : 1));
+    const pick = rng.weighted(pool, (c) => ((h.cogs[c.id] ?? 0) > 0 ? 1.4 : c.super ? 1.3 : 1));
     out.push(pick);
     pool.splice(pool.indexOf(pick), 1);
   }

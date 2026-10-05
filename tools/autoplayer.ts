@@ -287,7 +287,7 @@ export function botPickCog(offers: CogDef[], rng: Rng): CogDef {
 }
 
 /** What a player who wants to live picks: health, armour and speed first, then the gun. */
-const HUMAN_COGS = ['elinvoima', 'panssari', 'saappaat', 'lataus', 'kattila', 'imu', 'tahtain', 'vaali', 'ylipaine', 'tuli', 'pakkanen', 'lapaisy', 'kimmoke', 'ruumis', 'monipiippu', 'varaaja', 'tesla', 'sirpaleet', 'magneetti', 'kulta', 'vaihde', 'jalkipolte'];
+const HUMAN_COGS = ['elinvoima', 'panssari', 'saappaat', 'lataus', 'super_dash', 'super_turret', 'super_leap', 'super_slam', 'kattila', 'imu', 'tahtain', 'vaali', 'ylipaine', 'tuli', 'pakkanen', 'lapaisy', 'kimmoke', 'ruumis', 'monipiippu', 'varaaja', 'tesla', 'sirpaleet', 'magneetti', 'kulta', 'vaihde', 'jalkipolte'];
 export function humanPickCog(offers: CogDef[], rng: Rng): CogDef {
   const ranked = [...offers].sort((a, b) => HUMAN_COGS.indexOf(a.id) - HUMAN_COGS.indexOf(b.id));
   // Mostly the best of the three, sometimes the second: nobody reads every card.

@@ -115,6 +115,12 @@ super is the Brawl Stars part: it is what you save for and what you remember.
 | Ilmalaivuri (aeronaut) | jumps across the arena and lands with a stomp |
 | Seppä (smith) | a ground slam that throws enemies back, and a shield for a few seconds |
 
+Each super has levels 1 to 5, raised by the hero's own cog on the lift
+(`content/cogs.ts` holds the words, `superNums` in `supers.ts` the numbers).
+Level 2 is more damage, 3 more reach, 4 a control effect, 5 a new thing:
+the dash's soot trail, the turret's burst, the leap's second stomp, the
+anvil's aftershock. Turrets are capped at two at once, three at level 4.
+
 ## The arena
 
 Generated per floor from the seed. Brick walls and pipes block movement and

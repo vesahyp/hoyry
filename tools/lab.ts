@@ -31,11 +31,12 @@ function dummy(id: number, x: number, y: number): Enemy {
   };
 }
 
-/** `aim` is a drag on the super button (length 0..1); none is a tap. */
-export function lab(heroId: string, layout: [number, number][], aim?: { x: number; y: number }): { hits: number; dmg: number } {
+/** `aim` is a drag on the super button (length 0..1); none is a tap. `level` is the super's level, 1 to 5. */
+export function lab(heroId: string, layout: [number, number][], aim?: { x: number; y: number }, level = 1): { hits: number; dmg: number } {
   const def = HERO_BY_ID[heroId];
   const s = newRun(7, [def]);
   const h = s.heroes[0];
+  if (level > 1) h.cogs[`super_${def.super}`] = level - 1;
   // An open room: everything within 14 tiles of the hero is floor.
   const a = s.arena;
   h.x = (a.w / 2) * T;
@@ -46,7 +47,7 @@ export function lab(heroId: string, layout: [number, number][], aim?: { x: numbe
   s.enemies = layout.map(([x, y], i) => dummy(900000 + i, h.x + x, h.y + y));
   h.superCharge = 1;
   step(s, [{ ...NO_INPUT, superFire: true, superAimX: aim?.x ?? 0, superAimY: aim?.y ?? 0 }], DT);
-  for (let i = 0; i < 60 * WINDOW[def.super]; i++) step(s, [NO_INPUT], DT);
+  for (let i = 0; i < 60 * (WINDOW[def.super] + (level >= 5 ? 0.6 : 0)); i++) step(s, [NO_INPUT], DT);
   let hits = 0;
   let dmg = 0;
   for (const e of s.enemies) {

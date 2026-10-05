@@ -6,7 +6,7 @@ import type { HeroDef } from './content/heroes';
 import { hold, isLob, rollGun, MAKERS, MAKER_INFO, RARITY_COLOR } from './guns';
 import { createState, type Hero, type HeroInput, type SimState } from './state';
 import type { Enemy, Gun, GunType, Held, Maker } from './types';
-import { doSuper, flySuper, planSuper } from './supers';
+import { aftershock, doSuper, flySuper, planSuper, retireTurret, superNums } from './supers';
 import { computeStats } from './upgrades';
 import { fireBursts, maxAmmo, tickHeld, tryAttack, updateProjectiles, updateZones, type Shooter } from './weapons';
 
@@ -44,6 +44,7 @@ export function newRun(seed: number, defs: HeroDef[]): SimState {
       active: 0,
       superCharge: 0,
       dash: null,
+      aftershock: 0,
       leap: null,
       superPlan: { on: false, angle: 0, dist: 0, x: 0, y: 0, locked: -1 },
       shield: 0,
@@ -172,6 +173,7 @@ export function step(s: SimState, inputs: HeroInput[], dt = DT): void {
   }
   separate(s);
   for (const tu of s.turrets) updateTurret(s, tu, dt);
+  for (const tu of s.turrets) if (tu.life <= 0) retireTurret(s, tu);
   s.turrets = s.turrets.filter((x) => x.life > 0);
   updateProjectiles(s, dt);
   updateZones(s, dt);
@@ -191,6 +193,10 @@ function shooterOf(h: Hero): Shooter {
 function updateHero(s: SimState, h: Hero, inp: HeroInput, dt: number): void {
   h.hurtFlash = Math.max(0, h.hurtFlash - dt);
   h.invuln = Math.max(0, h.invuln - dt);
+  if (h.aftershock > 0) {
+    h.aftershock -= dt;
+    if (h.aftershock <= 0) aftershock(s, h);
+  }
   h.shield = Math.max(0, h.shield - dt);
   h.swapCd = Math.max(0, h.swapCd - dt);
   h.afterburn = Math.max(0, h.afterburn - dt);
@@ -322,7 +328,7 @@ function takeGun(s: SimState, h: Hero, dropId: number): void {
 function updateTurret(s: SimState, tu: SimState['turrets'][number], dt: number): void {
   tu.life -= dt;
   const h = s.heroes[tu.owner];
-  const sh: Shooter = { x: tu.x, y: tu.y, team: 0, owner: tu.owner, dmgMul: 0.8, slow: 1, hero: null };
+  const sh: Shooter = { x: tu.x, y: tu.y, team: 0, owner: tu.owner, dmgMul: superNums(h).turret.dmgMul, slow: 1, hero: null };
   tickHeld(tu.held, dt, h, true);
   fireBursts(s, sh, tu.held, dt);
   const g = tu.held.gun;

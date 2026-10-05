@@ -120,3 +120,15 @@ for (const def of heroes) {
   });
   console.log(def.id.padEnd(13) + cells.join(''));
 }
+
+// ————— part three: the levels —————
+
+console.log('\nby level: the pack at 150, one tap, hits/5 dmg (level 1 is the base; a super cog adds one)');
+console.log('             ' + [1, 2, 3, 4, 5].map((l) => `level ${l}`.padEnd(13)).join(''));
+for (const def of heroes) {
+  const cells = [1, 2, 3, 4, 5].map((l) => {
+    const r = lab(def.id, LAYOUTS['pack@150'], undefined, l);
+    return `${r.hits}/5 ${Math.round(r.dmg)}`.padEnd(13);
+  });
+  console.log(def.id.padEnd(13) + cells.join(''));
+}

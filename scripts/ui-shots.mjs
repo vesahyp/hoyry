@@ -105,6 +105,13 @@ try {
     await page.waitForTimeout(120);
     await page.screenshot({ path: `${dir}/pickup-pop.png` });
 
+    // The super's level on its button: level 3, mid-pop and settled.
+    await page.evaluate(() => { window.__sim.heroes[0].cogs.super_dash = 2; });
+    await page.waitForTimeout(150);
+    await page.screenshot({ path: `${dir}/super-level-pop.png` });
+    await page.waitForTimeout(900);
+    await page.screenshot({ path: `${dir}/super-level-3.png` });
+
     // Each hero's super aim, locked on a pack to the right.
     for (const hero of HEROES) {
       await start(page, hero.button);

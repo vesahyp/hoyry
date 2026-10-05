@@ -5,7 +5,7 @@ import { poolRadius } from '../game/content/thrown';
 import { hash2 } from '../game/rng';
 import type { Hero, SimState } from '../game/state';
 import type { Enemy, Projectile } from '../game/types';
-import { DASH, LEAP, SLAM, TURRET } from '../game/supers';
+import { superNums } from '../game/supers';
 import { maxAmmo } from '../game/weapons';
 import { bossSprite, blit, coinSprite, enemySprite, gunSprite, heroSprite, liftSprite, setSpriteResolution, steamSprite, turretSprite } from './sprites';
 
@@ -1086,6 +1086,7 @@ export class Renderer {
     if (plan.on) {
       const k = show.superOn ? 1 : 0.7;
       const pulse = 0.5 + 0.5 * Math.sin(this.t * 5);
+      const { dash: DASH, leap: LEAP, slam: SLAM, turret: TURRET } = superNums(h);
       switch (h.def.super) {
         case 'dash': {
           lane(ctx, h.x, h.y, plan.angle, plan.dist, h.r + DASH.width, this.t, k);

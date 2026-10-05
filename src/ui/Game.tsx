@@ -6,6 +6,7 @@ import { COG_BY_ID, type CogDef } from '../game/content/cogs';
 import { BOSSES } from '../game/content/enemies';
 import { rollCogs, applyCog } from '../game/upgrades';
 import { maxAmmo } from '../game/weapons';
+import { superLevel } from '../game/supers';
 import { RARITY_COLOR, TYPE_NAME, hold, rollGun } from '../game/guns';
 import type { GunType } from '../game/types';
 import type { Gun } from '../game/types';
@@ -43,6 +44,7 @@ interface Hud {
   guns: { gun: Gun; ammo: number; max: number; active: boolean; blink: boolean }[];
   superCharge: number;
   superName: string;
+  superLevel: number;
   near: Gun | null;
   enemies: number;
   phase: SimState['phase'];
@@ -175,6 +177,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
         guns: h.guns.map((g, i) => ({ gun: g.gun, ammo: g.ammo, max: maxAmmo(g, h), active: i === h.active, blink: ammoBlinkT[i] > 0 })),
         superCharge: h.superCharge,
         superName: t(h.def.superName),
+        superLevel: superLevel(h),
         near,
         enemies: s.enemies.length + s.marks.length,
         phase: s.phase,
@@ -454,6 +457,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
       <div ref={superRef} className={`superbtn ${hud && hud.superCharge >= 1 ? 'ready' : ''}`} style={{ ['--charge' as string]: `${Math.round((hud?.superCharge ?? 0) * 100)}%` }}>
         <span>★</span>
         <small>{hud?.superName}</small>
+        {hud && <Level key={hud.superLevel} n={hud.superLevel} />}
       </div>
       <div className="stick" ref={moveStickRef}>
         <div />

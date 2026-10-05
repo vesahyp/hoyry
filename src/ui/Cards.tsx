@@ -87,13 +87,15 @@ export function GunCard({ g, vs, compact = false }: { g: Gun; vs?: Gun; compact?
 }
 
 export function CogCard({ c, level, onPick }: { c: CogDef; level: number; onPick: () => void }) {
+  // A super's cog is its level: the hero starts at 1, so the card counts from there.
+  const base = c.super ? 1 : 0;
   return (
-    <button className={`card ${level > 0 ? 'owned' : 'new'}`} onClick={onPick}>
+    <button className={`card ${level > 0 || c.super ? 'owned' : 'new'} ${c.super ? 'supercog' : ''}`} onClick={onPick}>
       <div className="ic">{c.icon}</div>
       <div className="body">
         <div className="name">
           {t(c.name)}
-          <span className="lvl">{level > 0 ? `${level} → ${level + 1}` : tr('Uusi', 'New')}</span>
+          <span className="lvl">{level > 0 || c.super ? `${level + base} → ${level + base + 1}` : tr('Uusi', 'New')}</span>
         </div>
         <div className="desc">{t(c.desc(level + 1))}</div>
       </div>
