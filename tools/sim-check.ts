@@ -14,6 +14,7 @@ declare const process: { argv: string[]; exitCode?: number };
 import { generateArena, hitsSolid, idxAt, PIT, solidMove, WALL, type Arena } from '../src/game/arena';
 import { HERO_BY_ID } from '../src/game/content/heroes';
 import { GUN_TYPES, MAKERS, gunDps, hold, rollGun } from '../src/game/guns';
+import { LEGENDS } from '../src/game/content/legends';
 import { FLOOR, T } from '../src/game/arena';
 import { Rng } from '../src/game/rng';
 import { DT, newRun, step } from '../src/game/sim';
@@ -60,9 +61,9 @@ function gunTable(): void {
  */
 function gunLab(): void {
   const SECONDS = 10;
-  const measure = (type: (typeof GUN_TYPES)[number], layout: [number, number][]): number => {
+  const measure = (type: (typeof GUN_TYPES)[number] | null, layout: [number, number][], legend?: string): number => {
     let total = 0;
-    for (const maker of MAKERS) {
+    for (const maker of legend ? [MAKERS[0]] : MAKERS) {
       const s = newRun(7, [HERO_BY_ID.nuohooja]);
       const h = s.heroes[0];
       const a = s.arena;
@@ -72,19 +73,29 @@ function gunLab(): void {
       s.wavesLeft = 0;
       s.marks = [];
       s.enemies = layout.map(([x, y], i) => labDummy(900000 + i, h.x + x, h.y + y));
-      h.guns[0] = hold(rollGun(new Rng(99 + MAKERS.indexOf(maker)), 1, 1, { type, maker }));
+      h.guns[0] = hold(legend ? rollGun(new Rng(99), 1, 4, { legend }) : rollGun(new Rng(99 + MAKERS.indexOf(maker)), 1, 1, { type: type!, maker }));
       h.invuln = 1e6;
       for (let i = 0; i < 60 * SECONDS; i++) step(s, [{ ...NO_INPUT, fire: true }], DT);
       for (const e of s.enemies) total += 1e6 - e.hp;
     }
-    return total / MAKERS.length;
+    return total / (legend ? 1 : MAKERS.length);
   };
   console.log('\nmeasured, 10 s of fire at dummies, mean over the makers at rarity 1:');
-  console.log('type         one@100    pack@150 (5)   pack/one');
+  console.log('type         one@100    pack@150 (5)   line (4)   pack/one');
   for (const type of GUN_TYPES) {
     const one = measure(type, LAYOUTS['one@100']);
     const pack = measure(type, LAYOUTS['pack@150']);
-    console.log(`${type.padEnd(10)} ${one.toFixed(0).padStart(9)} ${pack.toFixed(0).padStart(13)} ${(pack / one).toFixed(2).padStart(10)}`);
+    const line = measure(type, LAYOUTS['line']);
+    console.log(`${type.padEnd(10)} ${one.toFixed(0).padStart(9)} ${pack.toFixed(0).padStart(13)} ${line.toFixed(0).padStart(10)} ${(pack / one).toFixed(2).padStart(10)}`);
+  }
+  // The orange guns the same way, at rarity 4, level 1: the one place their rules are weighed against each other.
+  console.log('\norange guns, the same lab:');
+  console.log('legend       one@100    pack@150 (5)   line (4)   pack/one');
+  for (const id of Object.keys(LEGENDS)) {
+    const one = measure(null, LAYOUTS['one@100'], id);
+    const pack = measure(null, LAYOUTS['pack@150'], id);
+    const line = measure(null, LAYOUTS['line'], id);
+    console.log(`${id.padEnd(10)} ${one.toFixed(0).padStart(9)} ${pack.toFixed(0).padStart(13)} ${line.toFixed(0).padStart(10)} ${(pack / one).toFixed(2).padStart(10)}`);
   }
 }
 

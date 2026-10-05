@@ -267,8 +267,14 @@ export function updateProjectiles(s: SimState, dt: number): void {
     }
     p.x = nx;
     p.y = ny;
-    if (p.legend === 'veturi' && p.team === 0 && Math.floor((p.life + sp * dt) / 28) !== Math.floor(p.life / 28)) {
-      s.zones.push({ id: newId(s), kind: 'fire', team: 0, owner: p.owner, x: p.x, y: p.y, r: 22, dps: p.damage * 0.4, life: 2.5, maxLife: 2.5 });
+    if (p.legend === 'veturi' && p.team === 0 && Math.floor((p.life + sp * dt) / 36) !== Math.floor(p.life / 36)) {
+      // The burning track: one patch every 36 px, and a patch laid on a
+      // patch still burning only refreshes it. The track used to stack
+      // (patches 28 px apart at radius 22, and every shot laid a new set
+      // over the last), which made standing on it worth three guns.
+      const old = s.zones.find((z) => z.kind === 'fire' && z.team === 0 && z.r === 20 && Math.hypot(z.x - p.x, z.y - p.y) < 24);
+      if (old) old.life = old.maxLife;
+      else s.zones.push({ id: newId(s), kind: 'fire', team: 0, owner: p.owner, x: p.x, y: p.y, r: 20, dps: p.damage * 0.35, life: 2.5, maxLife: 2.5 });
     }
     if (p.life <= 0) {
       if (p.blast > 0) impact(s, p, p.x, p.y);
