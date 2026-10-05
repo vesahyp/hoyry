@@ -36,16 +36,32 @@ function Stat({ label, v, cmp, better = 'high', fmt = (x: number) => String(Math
   );
 }
 
+/**
+ * A gun's level (the floor it dropped on) as a brass medal, on the slots,
+ * the swap button and the gun cards. Give it `key={gun.id}` where the gun
+ * in a place can change: a new gun remounts it and the pop plays once, so
+ * a level change is seen. `vs` colours it against the held gun's level.
+ */
+export function Level({ n, vs }: { n: number; vs?: number }) {
+  const cls = vs === undefined || vs === n ? '' : n > vs ? 'up' : 'down';
+  return (
+    <span className={`glvl ${cls}`} aria-label={tr(`taso ${n}`, `level ${n}`)}>
+      {n}
+    </span>
+  );
+}
+
 export function GunCard({ g, vs, compact = false }: { g: Gun; vs?: Gun; compact?: boolean }) {
   const col = RARITY_COLOR[g.rarity];
   const perShot = g.damage * g.count * g.burst;
   return (
     <div className={`gun r${g.rarity} ${compact ? 'compact' : ''}`} style={{ borderColor: col }}>
+      <Level key={g.id} n={g.level} vs={vs?.level} />
       <div className="gname" style={{ color: col }}>
         {t(g.name)}
       </div>
       <div className="gsub">
-        {t(RARITY_NAME[g.rarity])} · {MAKER_INFO[g.maker].name} · {t(TYPE_NAME[g.type])} · {tr('taso', 'level')} {g.level}
+        {t(RARITY_NAME[g.rarity])} · {MAKER_INFO[g.maker].name} · {t(TYPE_NAME[g.type])}
       </div>
       {!compact && (
         <>

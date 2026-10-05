@@ -19,10 +19,14 @@ osumista, ja sama keltainen palkki näkyy hahmon yllä. Kun se on täynnä,
 hahmon ympärillä hehkuu rengas ja pilli soi. Napautus tähtää itse:
 supervoima osuu parhaaseen kohteeseen tai joukkoon, ja kultainen tähtäin
 näyttää sen jo ennen napautusta. Syöksyn ja hypyn voi myös vetää, ja veto
-lukittuu lähimpään viholliseen vedon suunnassa. Kun sinulla on kaksi asetta, ⇄-nappi tähden vieressä vaihtaa
-asetta yhdellä napautuksella, ja se näyttää aseen johon vaihdat. Myös
-vasemman yläkulman asetaskua voi napauttaa. Kortti-nappi ottaa aseen jonka
-päällä seisot.
+lukittuu lähimpään viholliseen vedon suunnassa. Oma tähtäin on aina
+kultainen ja pyöreä; vihollisen messinkinen katkoviiva on eri asia. Kun
+sinulla on kaksi asetta, ⇄-nappi tähden vieressä vaihtaa asetta yhdellä
+napautuksella, ja se näyttää aseen johon vaihdat. Myös vasemman yläkulman
+asetaskua voi napauttaa. Jokaisen aseen **taso** (kerros jolta se putosi)
+on messinkisessä mitalissa taskussa, ⇄-napissa ja maasta löytyvän aseen
+kortissa: vihreä mitali on korkeampi kuin kädessäsi oleva, punainen matalampi.
+Kortti-nappi ottaa aseen jonka päällä seisot.
 
 **Näppäimistöllä:** WASD kävelee, hiiri tähtää ja ampuu klikillä (pidä
 pohjassa). Välilyönti tai hiiren oikea nappi on supervoima. Q tai hiiren
@@ -144,10 +148,13 @@ over your hero; when it is full a ring glows round the hero and a whistle
 blows. A tap aims it for you: the super goes for the best enemy or group
 in reach, and a gold sight shows where before you tap. The dash and the
 leap can also be dragged, and a drag locks onto the nearest enemy near
-its line. With two guns, the ⇄ button beside the
+its line. Your own sight is always gold and round; the enemy's brass dashed
+line is a different thing. With two guns, the ⇄ button beside the
 star swaps with one tap and shows the gun you swap to. The gun slots at the
-top left still swap on a tap too. The card button takes the gun you are
-standing on.
+top left still swap on a tap too. Every gun's **level** (the floor it dropped
+on) sits in a brass medal on its slot, on the ⇄ button and on the card of a
+gun on the floor: a green medal is higher than the gun in your hand, a red
+one lower. The card button takes the gun you are standing on.
 
 **Keyboard:** WASD walks, the mouse aims and fires on click (hold to keep
 firing). Space or right click is the super. Q or the scroll wheel swaps

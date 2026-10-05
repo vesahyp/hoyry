@@ -16,7 +16,7 @@ import { botInput, botPickCog, humanPickCog, BOT, HUMAN } from '../../tools/auto
 import { practiceRun } from '../../tools/build';
 import { track } from '../records';
 import { t, tr, num } from '../i18n';
-import { CogCard, GunCard } from './Cards';
+import { CogCard, GunCard, Level } from './Cards';
 import { UpdateBanner } from './Update';
 
 export interface RunSummary {
@@ -393,6 +393,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
                   <i key={k} className={k < Math.floor(g.ammo) ? 'full' : ''} />
                 ))}
               </div>
+              <Level key={g.gun.id} n={g.gun.level} />
             </button>
           ))}
           {hud.guns.length < 2 && <div className="slot empty">{tr('Tyhjä paikka', 'Empty slot')}</div>}
@@ -438,6 +439,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
                 <i key={k} className={k < Math.floor(other.ammo) ? 'full' : ''} />
               ))}
             </div>
+            <Level key={other.gun.id} n={other.gun.level} />
           </>
         )}
       </button>

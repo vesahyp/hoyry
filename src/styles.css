@@ -97,7 +97,7 @@ h2 { margin: 0 0 12px; font-size: 24px; color: var(--brass); }
 
 /* gun slots, bottom left above the move thumb's reach */
 .slots { position: absolute; left: calc(var(--sal) + 10px); top: calc(var(--sat) + 54px); display: flex; flex-direction: column; gap: 5px; }
-.slot { width: 168px; text-align: left; padding: 5px 8px; border-radius: 9px; border: 2px solid; background: rgba(20,14,8,0.6); cursor: pointer; opacity: 0.65; }
+.slot { position: relative; width: 168px; text-align: left; padding: 5px 34px 5px 8px; border-radius: 9px; border: 2px solid; background: rgba(20,14,8,0.6); cursor: pointer; opacity: 0.65; }
 .slot.on { opacity: 1; background: rgba(40,26,12,0.85); box-shadow: 0 0 10px rgba(224,176,72,0.3); }
 .slot.empty { border-color: rgba(242,230,200,0.2) !important; border-style: dashed; color: var(--muted); font-size: 11px; cursor: default; }
 /* Two lines rather than an ellipsis: a gun's full name is part of reading it. */
@@ -109,6 +109,18 @@ h2 { margin: 0 0 12px; font-size: 24px; color: var(--brass); }
 .slot .pips.blink i { animation: pipBlink 0.18s steps(1) 3; }
 @keyframes pipBlink { 50% { background: rgba(255,60,50,0.9); } }
 
+/* A gun's level, the floor it dropped on, as a brass medal: on each slot,
+   the swap button and the gun cards (Level in Cards.tsx). It is keyed by
+   the gun, so a new gun in a place remounts it and the pop plays once:
+   that is how a level change gets noticed. Green or red on the pickup
+   card says up or down against the held gun. */
+.glvl { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 40% 32%, #ffeeb0, #e0b048 55%, #8a5e14); color: #2a1800; font-size: 11px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px #2a1800, 0 0 0 3px rgba(255,220,140,0.35), inset 0 -2px 0 rgba(0,0,0,0.3); animation: lvlPop 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) backwards; }
+.glvl.up { background: radial-gradient(circle at 40% 32%, #e0ffd8, #8ae070 55%, #2a7a34); }
+.glvl.down { background: radial-gradient(circle at 40% 32%, #ffd8cc, #ff7a6a 55%, #8a2a1a); }
+@keyframes lvlPop { 0% { transform: scale(2.2); box-shadow: 0 0 0 2px #2a1800, 0 0 22px #ffd040; } 60% { box-shadow: 0 0 0 2px #2a1800, 0 0 10px rgba(255,208,64,0.6); } 100% { transform: scale(1); } }
+.slot .glvl { position: absolute; right: 7px; top: 50%; margin-top: -10px; }
+.slot.on .glvl { box-shadow: 0 0 0 2px #2a1800, 0 0 8px rgba(255,208,64,0.5), inset 0 -2px 0 rgba(0,0,0,0.3); }
+
 /* the swap button: left of the super, same height, in reach of the right thumb */
 .swapbtn { position: absolute; right: calc(var(--sar) + 102px); bottom: calc(var(--sab) + 46% + 8px); width: 60px; height: 60px; padding: 0; border-radius: 50%; border: 3px solid; background: rgba(30,20,10,0.85); color: #f2e6c8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 .swapbtn:active { transform: scale(0.92); }
@@ -118,6 +130,7 @@ h2 { margin: 0 0 12px; font-size: 24px; color: var(--brass); }
 .swapbtn .pips { display: flex; gap: 2px; width: 34px; margin-top: 2px; }
 .swapbtn .pips i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.15); }
 .swapbtn .pips i.full { background: #ffb020; }
+.swapbtn .glvl { position: absolute; right: -5px; top: -5px; width: 22px; height: 22px; font-size: 12px; }
 
 /* the super button */
 .superbtn { position: absolute; right: calc(var(--sar) + 14px); bottom: calc(var(--sab) + 46%); width: 76px; height: 76px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: conic-gradient(#ffd040 var(--charge), rgba(30,20,10,0.7) 0); border: 3px solid rgba(0,0,0,0.6); pointer-events: none; opacity: 0.85; }
@@ -151,7 +164,9 @@ h2 { margin: 0 0 12px; font-size: 24px; color: var(--brass); }
 .pickup .take { margin: 5px 0 0; min-width: 0; padding: 8px; font-size: 14px; }
 .pickup .take small { opacity: 0.6; font-size: 10px; margin-left: 4px; }
 @media (orientation: landscape) and (max-height: 500px) { .pickup { width: 230px; top: calc(var(--sat) + 150px); } }
-.gun { text-align: left; background: var(--panel); border: 2px solid; border-radius: 12px; padding: 9px 11px; box-shadow: 0 6px 20px rgba(0,0,0,0.6); }
+.gun { position: relative; text-align: left; background: var(--panel); border: 2px solid; border-radius: 12px; padding: 9px 11px; box-shadow: 0 6px 20px rgba(0,0,0,0.6); }
+.gun .glvl { position: absolute; right: 8px; top: 8px; width: 26px; height: 26px; font-size: 13px; }
+.gun .gname { padding-right: 32px; }
 .gun.r3 { box-shadow: 0 0 18px rgba(192,112,255,0.45), 0 6px 20px rgba(0,0,0,0.6); }
 .gun.r4 { box-shadow: 0 0 24px rgba(255,154,42,0.6), 0 6px 20px rgba(0,0,0,0.6); background: linear-gradient(160deg, rgba(90,50,10,0.95), var(--panel)); }
 .gun .gname { font-weight: 900; font-size: 16px; line-height: 1.15; }
