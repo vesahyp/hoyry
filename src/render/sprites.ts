@@ -590,6 +590,100 @@ export function bossSprite(id: string, color: string, frame: number): Sprite {
         c.quadraticCurveTo(9, -17, 0, -15);
         c.fill();
         break;
+      case 'sahuri': {
+        // A log carriage on wheels with a great circular saw held up on an arm.
+        ell(c, -14, 26, 7, 7, '#2a2a2e', OUT, 1.5);
+        ell(c, 14, 26, 7, 7, '#2a2a2e', OUT, 1.5);
+        rect(c, -24, 4, 48, 20, color, 4, OUT, 2);
+        rect(c, -20, 8, 40, 5, '#7a4a26', 1.5);
+        for (let i = 0; i < 6; i++) rivet(c, -20 + i * 8, 20, 1.4);
+        rect(c, -4, -22 + step, 8, 28, '#4a4e56', 2, OUT, 1.5);
+        const sy = -30 + step;
+        c.save();
+        c.translate(0, sy);
+        c.rotate(frame * 0.4);
+        ell(c, 0, 0, 20, 20, '#c8c8d0', OUT, 1.6);
+        c.fillStyle = '#e0e0e8';
+        for (let i = 0; i < 14; i++) {
+          const a = (i / 14) * Math.PI * 2;
+          c.beginPath();
+          c.moveTo(Math.cos(a) * 20, Math.sin(a) * 20);
+          c.lineTo(Math.cos(a + 0.2) * 25, Math.sin(a + 0.2) * 25);
+          c.lineTo(Math.cos(a + 0.4) * 20, Math.sin(a + 0.4) * 20);
+          c.fill();
+        }
+        ell(c, 0, 0, 5, 5, '#c8a040', OUT, 1);
+        c.restore();
+        eye(-8, 12, 2.8);
+        eye(8, 12, 2.8);
+        break;
+      }
+      case 'vesiratas': {
+        // A great wooden water wheel, paddles round the rim, eyes in the hub, water flying off.
+        c.save();
+        c.rotate(frame * 0.35);
+        ell(c, 0, 0, 32, 32, color, OUT, 2.2);
+        ell(c, 0, 0, 24, 24, shade(color, -0.3), OUT, 1.4);
+        c.fillStyle = shade(color, 0.25);
+        c.strokeStyle = OUT;
+        c.lineWidth = 1.4;
+        for (let i = 0; i < 10; i++) {
+          const a = (i / 10) * Math.PI * 2;
+          c.beginPath();
+          c.moveTo(Math.cos(a) * 24, Math.sin(a) * 24);
+          c.lineTo(Math.cos(a) * 37, Math.sin(a) * 37);
+          c.lineTo(Math.cos(a + 0.22) * 37, Math.sin(a + 0.22) * 37);
+          c.lineTo(Math.cos(a + 0.22) * 24, Math.sin(a + 0.22) * 24);
+          c.closePath();
+          c.fill();
+          c.stroke();
+        }
+        for (let i = 0; i < 4; i++) {
+          const a = (i / 4) * Math.PI * 2 + 0.4;
+          c.strokeStyle = shade(color, 0.3);
+          c.lineWidth = 3;
+          c.beginPath();
+          c.moveTo(Math.cos(a) * 8, Math.sin(a) * 8);
+          c.lineTo(Math.cos(a) * 23, Math.sin(a) * 23);
+          c.stroke();
+        }
+        c.restore();
+        ell(c, 0, 0, 11, 11, '#4a4e56', OUT, 1.6);
+        for (let i = 0; i < 3; i++) ell(c, -30 + i * 30, -36 + (i % 2) * 6, 3, 2, 'rgba(160,210,255,0.85)', null);
+        eye(-4.5, -1, 2.4);
+        eye(4.5, -1, 2.4);
+        break;
+      }
+      case 'masuuni': {
+        // A squat brick furnace: a glowing door, a chimney stack, bellows arms either side.
+        rect(c, -26, -14, 52, 40, color, 5, OUT, 2);
+        c.strokeStyle = shade(color, -0.35);
+        c.lineWidth = 1.2;
+        for (let row = 0; row < 4; row++) {
+          c.beginPath();
+          c.moveTo(-24, -6 + row * 9);
+          c.lineTo(24, -6 + row * 9);
+          c.stroke();
+          for (let k = 0; k < 4; k++) {
+            c.beginPath();
+            c.moveTo(-18 + k * 12 + (row % 2) * 6, -6 + row * 9);
+            c.lineTo(-18 + k * 12 + (row % 2) * 6, 3 + row * 9);
+            c.stroke();
+          }
+        }
+        rect(c, -12, -4, 24, 20, '#2a1a10', 3, OUT, 1.5);
+        rect(c, -9, 0, 18, 13, frame ? '#ffb040' : '#ff7a2a', 2, null);
+        rect(c, -9, 7, 18, 6, '#ff4a1a', 2, null);
+        rect(c, -9, -30, 18, 18, '#3a3a40', 2, OUT, 1.5);
+        rect(c, -11, -34, 22, 5, '#c8a040', 1.5);
+        for (const sx of [-1, 1]) {
+          rect(c, sx * 30 - 8, -2 + step * sx, 16, 10, '#7a4a26', 3, OUT, 1.5);
+          rect(c, sx * 30 - 5, 2 + step * sx, 10, 4, '#c8a040', 1, null);
+        }
+        eye(-7, -18, 2.6);
+        eye(7, -18, 2.6);
+        break;
+      }
     }
   });
 }

@@ -3,7 +3,7 @@ import { newRun, step, DT, nextFloor } from '../game/sim';
 import type { SimState } from '../game/state';
 import type { HeroDef } from '../game/content/heroes';
 import { COG_BY_ID, type CogDef } from '../game/content/cogs';
-import { BOSSES } from '../game/content/enemies';
+import { bossAt } from '../game/content/enemies';
 import { rollCogs, applyCog } from '../game/upgrades';
 import { maxAmmo } from '../game/weapons';
 import { superLevel } from '../game/supers';
@@ -171,7 +171,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
         floor: s.floor,
         coins: s.run.coins,
         kills: s.run.kills,
-        boss: boss ? { name: t(BOSSES[(s.floor / 5 - 1) % BOSSES.length].name), hp: boss.hp, max: boss.maxHp } : null,
+        boss: boss ? { name: t(bossAt(s.seed, s.floor).name), hp: boss.hp, max: boss.maxHp } : null,
         banner: s.banner ? { text: s.banner.text, sub: s.banner.sub, color: s.banner.color } : null,
         toast: s.toast ? { text: s.toast.text, color: s.toast.color } : null,
         guns: h.guns.map((g, i) => ({ gun: g.gun, ammo: g.ammo, max: maxAmmo(g, h), active: i === h.active, blink: ammoBlinkT[i] > 0 })),

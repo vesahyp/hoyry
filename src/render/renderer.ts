@@ -1,5 +1,5 @@
 import { BARREL, BUSH, CRATE, CRATE_HP, PIT, T, VENT, WALL, type Arena } from '../game/arena';
-import { BOSSES, ENEMIES } from '../game/content/enemies';
+import { bossAt, ENEMIES } from '../game/content/enemies';
 import { ELEMENT_COLOR, isLob, MAKER_INFO, RARITY_COLOR } from '../game/guns';
 import { poolRadius } from '../game/content/thrown';
 import { hash2 } from '../game/rng';
@@ -485,7 +485,27 @@ export class Renderer {
       const h = nearestHero(s, e);
       if (!h) continue;
       const an = Math.atan2(h.y - e.y, h.x - e.x);
-      if (e.behaviour === 'brute' || e.boss) {
+      if (e.boss && bossAt(s.seed, s.floor).pattern === 'furnace') {
+        // The furnace breathing in: the cone it will breathe out, and the
+        // draught, lines sliding in toward its mouth.
+        ctx.fillStyle = `rgba(255,90,30,${0.16 + 0.1 * Math.sin(this.t * 12)})`;
+        ctx.beginPath();
+        ctx.moveTo(e.x, e.y);
+        ctx.arc(e.x, e.y, e.r + 250, an - 0.85, an + 0.85);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,200,150,0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let i = 0; i < 7; i++) {
+          const a2 = an + (i - 3) * 0.24;
+          const ph = (this.t * 1.6 + i * 0.13) % 1;
+          const d1 = e.r + 240 - ph * 220;
+          ctx.moveTo(e.x + Math.cos(a2) * d1, e.y + Math.sin(a2) * d1);
+          ctx.lineTo(e.x + Math.cos(a2) * (d1 - 18), e.y + Math.sin(a2) * (d1 - 18));
+        }
+        ctx.stroke();
+      } else if (e.behaviour === 'brute' || e.boss) {
         ctx.fillStyle = 'rgba(255,60,40,0.22)';
         ctx.save();
         ctx.translate(e.x, e.y);
@@ -1125,7 +1145,7 @@ export class Renderer {
     let sp;
     let bodyY = e.y - e.r * 0.4;
     if (e.boss) {
-      const b = BOSSES[(s.floor / 5 - 1) % BOSSES.length] ?? BOSSES[0];
+      const b = bossAt(s.seed, s.floor);
       sp = bossSprite(b.id, b.color, frame);
       bodyY = e.y - 14;
     } else {
@@ -1300,6 +1320,34 @@ export class Renderer {
   /** Enemy shots: big, red-ringed and dark in the middle, so they read against anything. */
   private enemyBullet(ctx: CanvasRenderingContext2D, p: Projectile): void {
     const pulse = 1 + 0.12 * Math.sin(this.t * 18 + p.id);
+    if (p.gunType === 'saw') {
+      // The Sawyer's blade: a red-hot disc with teeth, spinning.
+      ctx.fillStyle = 'rgba(255,60,30,0.3)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * 1.6 * pulse, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.spin);
+      ctx.fillStyle = '#ff6a3a';
+      ctx.strokeStyle = '#3a0a06';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (let i = 0; i < 16; i++) {
+        const an = (i / 16) * Math.PI * 2;
+        const rr = i % 2 ? p.r : p.r * 0.72;
+        ctx.lineTo(Math.cos(an) * rr, Math.sin(an) * rr);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#2a0a06';
+      ctx.beginPath();
+      ctx.arc(0, 0, p.r * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
     if (p.homing > 0) {
       // A clockwork shot: brass, a gear ring, a tail along where it came from.
       const sp = Math.hypot(p.vx, p.vy) || 1;

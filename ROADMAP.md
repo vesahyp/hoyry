@@ -12,6 +12,11 @@ The design is in `docs/design.md`.
 - The bot no longer kites the last enemies of a floor, and the sweep and
   the aeronaut now die a little earlier in its runs. Check after the
   playtest whether that is the bot or the game.
+- The bot's Aeronaut clears the Boiler King on floor 5 only about half
+  the time (`make deaths FLOORS=5 RUNS=16 HERO=ilmalaivuri`: the killing
+  hit is the charge), and did so before the thrown guns and the super
+  levels too. Decide by hand whether the King's charge is dodgeable with a
+  mortar in hand, or whether the Aeronaut needs a step more speed.
 
 - An enemy that throws gunk back: a tar-flask lobber from floor 5 or so,
   whose pool slows the hero. Its lob telegraphs like the mortar crew's

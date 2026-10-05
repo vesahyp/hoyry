@@ -1,4 +1,5 @@
 import { L, type Text } from '../../i18n';
+import { Rng } from '../rng';
 import type { Behaviour, GunType, Maker } from '../types';
 
 /**
@@ -48,17 +49,35 @@ export interface BossDef {
   speed: number;
   r: number;
   touch: number;
-  pattern: 'king' | 'mortar' | 'clock' | 'owner';
+  pattern: 'king' | 'mortar' | 'clock' | 'owner' | 'sawyer' | 'wheel' | 'furnace';
   color: string;
 }
 
-/** One boss every fifth floor, in this order, then round again stronger. */
+/**
+ * One boss every fifth floor. The Boiler King opens every round (floor 5,
+ * then again when all have been met); the rest come in an order the run's
+ * seed shuffles (bossAt), so two runs meet them differently and no boss
+ * waits until floor 35. A round later they come back stronger (sim.ts).
+ */
 export const BOSSES: BossDef[] = [
   { id: 'kattilakuningas', name: L('Kattilakuningas', 'The Boiler King'), hp: 1500, speed: 70, r: 30, touch: 20, pattern: 'king', color: '#7a7a82' },
   { id: 'mestarimorssari', name: L('Mestari Mörssäri', 'Master Mortar'), hp: 1700, speed: 55, r: 28, touch: 20, pattern: 'mortar', color: '#4a6a4a' },
   { id: 'kellokoneisto', name: L('Suuri kellokoneisto', 'The Grand Clockwork'), hp: 2000, speed: 40, r: 32, touch: 20, pattern: 'clock', color: '#c8a040' },
   { id: 'tehtailija', name: L('Tehtailija', 'The Mill Owner'), hp: 2400, speed: 80, r: 26, touch: 26, pattern: 'owner', color: '#5a2a3a' },
+  { id: 'sahuri', name: L('Sahuri', 'The Sawyer'), hp: 1900, speed: 62, r: 28, touch: 22, pattern: 'sawyer', color: '#6a7a8a' },
+  { id: 'vesiratas', name: L('Vesiratas', 'The Water Wheel'), hp: 2100, speed: 95, r: 30, touch: 24, pattern: 'wheel', color: '#6a4a28' },
+  { id: 'masuuni', name: L('Masuuni', 'The Blast Furnace'), hp: 2600, speed: 44, r: 32, touch: 26, pattern: 'furnace', color: '#8a3a22' },
 ];
+
+/** The boss of boss floor `floor` in the run with `seed`: the King opens each round, the rest shuffled per round. */
+export function bossAt(seed: number, floor: number): BossDef {
+  const k = Math.max(0, Math.round(floor / 5) - 1);
+  const n = BOSSES.length;
+  const pos = k % n;
+  if (pos === 0) return BOSSES[0];
+  const rest = new Rng((seed ^ 0xb055) + Math.floor(k / n) * 7919).shuffle(BOSSES.slice(1));
+  return rest[pos - 1];
+}
 
 export interface AffixDef {
   name: Text;

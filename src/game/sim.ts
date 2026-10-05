@@ -1,7 +1,7 @@
 import { t, tr } from '../i18n';
 import { BUSH, T, flowDir, freeSpot, generateArena, lineOfSight, moveCircle, openDir, spawnTiles, tileAt, updateFlow } from './arena';
 import { cogLevel, effect, explode, heal, hurtEnemy, hurtHero, killEnemy, nearestTarget, newId, text } from './combat';
-import { AFFIXES, BOSSES, ENEMIES } from './content/enemies';
+import { AFFIXES, BOSSES, bossAt, ENEMIES } from './content/enemies';
 import type { HeroDef } from './content/heroes';
 import { hold, isLob, rollGun, MAKERS, MAKER_INFO, RARITY_COLOR } from './guns';
 import { createState, type Hero, type HeroInput, type SimState } from './state';
@@ -110,7 +110,7 @@ export function startFloor(s: SimState, floor: number): void {
   s.cam.y = s.heroes[0].y;
   updateFlow(s.arena, s.heroes);
   s.banner = s.bossFloor
-    ? { text: tr(`Kerros ${floor}`, `Floor ${floor}`), sub: t(BOSSES[(floor / 5 - 1) % BOSSES.length].name), life: 2.6, color: '#ff7050' }
+    ? { text: tr(`Kerros ${floor}`, `Floor ${floor}`), sub: t(bossAt(s.seed, floor).name), life: 2.6, color: '#ff7050' }
     : { text: tr(`Kerros ${floor}`, `Floor ${floor}`), sub: floorName(floor), life: 2 };
   s.sounds.push(s.bossFloor ? 'boss' : 'floor');
 }
@@ -380,7 +380,7 @@ function spawnWave(s: SimState): void {
   };
   let n = 0;
   if (s.bossFloor) {
-    const bi = (s.floor / 5 - 1) % BOSSES.length;
+    const bi = BOSSES.indexOf(bossAt(s.seed, s.floor));
     s.marks.push({ kind: 'boss', x: a.liftX, y: a.liftY + 5 * T, t: 1.6, elite: [], boss: bi });
     n++;
   }
@@ -426,7 +426,7 @@ function spawnEnemy(s: SimState, m: SimState['marks'][number]): void {
     const b = BOSSES[m.boss];
     const cycle = Math.floor((s.floor - 1) / (5 * BOSSES.length));
     const hp = b.hp * hm * 0.55 * (1 + cycle * 0.5);
-    const gun = rollGun(s.rng, s.floor, 2, { type: b.pattern === 'mortar' ? 'mortar' : 'revolver' });
+    const gun = rollGun(s.rng, s.floor, 2, { type: b.pattern === 'mortar' ? 'mortar' : b.pattern === 'sawyer' ? 'saw' : 'revolver' });
     s.enemies.push(makeEnemy(s, 'boss', m.x, m.y, b.r, hp, b.speed, 'boss', b.touch * dmgMul(s.floor), hold(gun), [], true));
     s.banner = { text: t(b.name), sub: tr('saapuu', 'arrives'), life: 2.2, color: '#ff7050' };
     s.shake = 0.5;
@@ -782,10 +782,10 @@ function lobAt(s: SimState, e: Enemy, tx: number, ty: number, dmg: number, blast
 }
 
 function boss(s: SimState, e: Enemy, h: Hero, dx: number, dy: number, dist: number, sees: boolean, go: (sign: number, strafe?: number, mul?: number) => void, sh: Shooter, dt: number): void {
-  const b = BOSSES[(s.floor / 5 - 1) % BOSSES.length] ?? BOSSES[0];
+  const b = bossAt(s.seed, s.floor);
   const dm = dmgMul(s.floor);
   const angry = e.hp < e.maxHp * 0.5;
-  const ex = e as Enemy & { pt?: number; pt2?: number; spin?: number };
+  const ex = e as Enemy & { pt?: number; pt2?: number; spin?: number; inhale?: number; roll?: number };
   ex.pt = (ex.pt ?? 2) - dt * (angry ? 1.35 : 1);
   ex.pt2 = (ex.pt2 ?? 5) - dt;
   ex.spin = (ex.spin ?? 0) + dt;
@@ -870,7 +870,112 @@ function boss(s: SimState, e: Enemy, h: Hero, dx: number, dy: number, dist: numb
         } else for (let i = 0; i < 2; i++) s.marks.push({ kind: 'niittari', x: e.x + s.rng.range(-60, 60), y: e.y + s.rng.range(-60, 60), t: 0.8, elite: [], boss: -1 });
       }
       break;
+    case 'sawyer':
+      // The Sawyer: a fan of saw blades that bounce off the walls and keep
+      // coming back, and now and then a rush down the line at you.
+      if (e.mode === 'windup' || e.mode === 'charge' || e.mode === 'recover') {
+        brute(s, e, h, dx, dy, dist, sees, go, dt);
+        break;
+      }
+      go(dist > 190 ? 1 : 0.0001, e.side, 0.7);
+      contact(s, e, h, dist);
+      if (ex.pt <= 0 && sees) {
+        ex.pt = angry ? 2.1 : 2.8;
+        const n = angry ? 5 : 3;
+        for (let i = 0; i < n; i++) blade(s, e, toward + (i - (n - 1) / 2) * 0.32, 220, 13 * dm);
+        s.sounds.push('bossshot');
+      }
+      if (ex.pt2 <= 0 && sees) {
+        ex.pt2 = 6.5;
+        e.mode = 'windup';
+        e.modeT = 0.7;
+      }
+      break;
+    case 'wheel':
+      // The Water Wheel: rolls at you in long straight runs, spraying
+      // water to both sides as it goes, and every so often a ring of
+      // spray and a couple of rats shaken loose.
+      if (e.mode === 'windup' || e.mode === 'charge' || e.mode === 'recover') {
+        brute(s, e, h, dx, dy, dist, sees, go, dt);
+        if (e.mode === 'charge') {
+          ex.roll = (ex.roll ?? 0) + dt;
+          if (ex.roll >= 0.2) {
+            ex.roll = 0;
+            const side = Math.atan2(e.cy, e.cx) + Math.PI / 2;
+            orb(s, e, side, 130, 8 * dm, 7);
+            orb(s, e, side + Math.PI, 130, 8 * dm, 7);
+          }
+        }
+        break;
+      }
+      go(1, e.side, 0.9);
+      contact(s, e, h, dist);
+      if (ex.pt <= 0 && sees && dist > 90) {
+        ex.pt = angry ? 2.2 : 3.2;
+        e.mode = 'windup';
+        e.modeT = 0.6;
+      }
+      if (ex.pt2 <= 0) {
+        ex.pt2 = 8;
+        for (let i = 0; i < 12; i++) orb(s, e, (i / 12) * Math.PI * 2 + ex.spin, 140, 11 * dm, 9);
+        for (let i = 0; i < 2; i++) s.marks.push({ kind: 'rotta', x: e.x + s.rng.range(-50, 50), y: e.y + s.rng.range(-50, 50), t: 0.7, elite: [], boss: -1 });
+        s.sounds.push('bossshot');
+      }
+      break;
+    case 'furnace': {
+      // The Blast Furnace: slow, but it breathes in and you slide toward
+      // it, then it breathes out a cone of fire that burns on the floor.
+      // Between breaths it spits embers that land round you.
+      if (ex.inhale !== undefined && ex.inhale > 0) {
+        ex.inhale -= dt;
+        e.facing = toward;
+        if (dist > e.r + h.r + 6 && !h.dash && !h.leap) moveCircle(s.arena, h, h.r, (-dx / dist) * 75 * dt, (-dy / dist) * 75 * dt);
+        if (ex.inhale <= 0) {
+          e.mode = 'recover';
+          e.modeT = 0.6;
+          for (let k = 1; k <= 7; k++) {
+            const d = e.r + 10 + k * 32;
+            const spread = 0.12 + 0.1 * k;
+            for (let j = -1; j <= 1; j++) {
+              const an = toward + j * spread;
+              s.zones.push({ id: newId(s), kind: 'fire', team: 1, owner: -1, x: e.x + Math.cos(an) * d, y: e.y + Math.sin(an) * d, r: 24, dps: 15 * dm, life: 2.6, maxLife: 2.6 });
+            }
+          }
+          s.shake = 0.3;
+          s.sounds.push('boom');
+        }
+        break;
+      }
+      if (e.mode === 'recover') {
+        if (e.modeT <= 0) e.mode = 'chase';
+        break;
+      }
+      go(dist > 230 ? 1 : 0.0001, 0, 0.6);
+      contact(s, e, h, dist);
+      if (ex.pt <= 0 && sees && dist < 320) {
+        ex.pt = angry ? 4.2 : 6;
+        ex.inhale = 1.3;
+        e.mode = 'windup';
+        e.modeT = 1.3;
+        s.sounds.push('vent');
+      }
+      if (ex.pt2 <= 0 && sees) {
+        ex.pt2 = angry ? 1.8 : 2.4;
+        for (let i = 0; i < 2; i++) lobAt(s, e, h.x + s.rng.range(-70, 70), h.y + s.rng.range(-70, 70), 15 * dm, 48, 1.1);
+        s.sounds.push('bossshot');
+      }
+      break;
+    }
   }
+}
+
+/** The Sawyer's blade: an enemy saw that bounces off the walls. */
+function blade(s: SimState, e: Enemy, angle: number, speed: number, dmg: number): void {
+  orb(s, e, angle, speed, dmg, 11);
+  const p = s.projectiles[s.projectiles.length - 1];
+  p.gunType = 'saw';
+  p.bounces = 4;
+  p.life = 1100;
 }
 
 /** Bodies push each other apart so a crowd has a shape. */

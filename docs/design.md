@@ -149,7 +149,12 @@ rad/s, a 60 px circle at enemy bullet speed, and no sidestep beat it.
 The cast is the works come alive: cog rats in swarms, rivet gunners, boiler
 brutes that charge, mortar crews, bomb walkers that run at you and burst,
 turret towers. Elites have a gold ring and a name built from affixes (Nopea,
-Panssaroitu, Räjähtävä). Bosses have a name and a pattern.
+Panssaroitu, Räjähtävä). Bosses have a name and a pattern: seven of them,
+the Boiler King first on floor 5 and the other six in a run-seeded order
+(`bossAt`), each a different demand on the thumbs: a ring to step through,
+shells to walk out of, hands to time, a charge to sidestep, blades that
+come back off the walls, a rolling body with spray to its sides, and a
+pull to walk against before the fire comes.
 
 ## What carries over from Räkkä
 

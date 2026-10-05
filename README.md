@@ -44,7 +44,13 @@ Kierros on laskeutuminen tehtaan läpi, kerros kerrallaan.
   luoti pomppii seinästä, osumat sytyttävät palon, supervoima latautuu
   kolmanneksen nopeammin.
 - **Joka viides kerros on pomo.** Jokainen pomo pudottaa aseen, joka on
-  violetti tai parempi.
+  violetti tai parempi. Pomoja on seitsemän: Kattilakuningas aloittaa aina
+  (kerros 5), ja loput kuusi tulevat kierroksen arpomassa järjestyksessä,
+  joten kaksi kierrosta kohtaa ne eri järjestyksessä. Kun kaikki on nähty,
+  ne palaavat vahvempina. Uusimmat: **Sahuri** heittää seinistä kimpoavia
+  sahanteriä ja ryntää, **Vesiratas** vierii päällesi pitkin suorin vedoin
+  ja roiskii vettä molemmin puolin, **Masuuni** vetää sinut henkäyksellään
+  luokseen ja puhaltaa sitten tulikartion lattiaan.
 - **Kuolema päättää kierroksen.** Tulos on syvin kerros, sitten aika.
 
 ## Tulostaulu
@@ -185,7 +191,14 @@ guns, 1 and 2 pick a slot. E takes one off the floor. Esc pauses.
 **The loop:** a floor is one arena with two or three waves of enemies. Kill
 the last one and the lift opens, never before. Ride it and pick one of
 three cogs, a permanent rule change for the rest of the run. Every fifth
-floor is a boss, and every boss drops a purple gun or better. Death ends
+floor is a boss, and every boss drops a purple gun or better. There are
+seven bosses: the Boiler King always opens (floor 5), and the other six
+come in an order the run draws, so two runs meet them differently; once
+all are met they return stronger. The newest three: **the Sawyer** throws
+saw blades that bounce off the walls and rushes you, **the Water Wheel**
+rolls at you in long straight runs and sprays water to both sides, **the
+Blast Furnace** breathes in and drags you toward it, then breathes a cone
+of fire onto the floor. Death ends
 the run; the score is the deepest floor, then the time.
 
 **Leaderboard:** a run that ends on floor 2 or deeper asks for three
