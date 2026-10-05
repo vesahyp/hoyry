@@ -13,6 +13,12 @@ The design is in `docs/design.md`.
   the aeronaut now die a little earlier in its runs. Check after the
   playtest whether that is the bot or the game.
 
+- An enemy that throws gunk back: a tar-flask lobber from floor 5 or so,
+  whose pool slows the hero. Its lob telegraphs like the mortar crew's
+  (the red landing circle) and the pool must read as the enemy's: darker,
+  red-lipped, never the player's brown tar. Build it only after the
+  player's thrown guns have been played by hand.
+
 ## Later
 
 - The workshop: coins buy small permanent ranks between runs (Räkkä's

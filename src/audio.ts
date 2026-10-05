@@ -149,6 +149,23 @@ class Audio {
         this.tone(900, 0.2, { type: 'sawtooth', gain: 0.05, slide: 1.6 });
         this.burst(0.06, { gain: 0.1, hp: 1500 });
         break;
+      // The thrown guns: a soft whoosh on the throw, then what lands.
+      case 'shot_tar':
+      case 'shot_dust':
+      case 'shot_canister':
+        if (!this.allow(name, 60)) return;
+        this.tone(420, 0.22, { type: 'triangle', gain: 0.07, slide: 0.5 });
+        this.burst(0.1, { gain: 0.06, hp: 300, lp: 1500 });
+        break;
+      case 'splat':
+        if (!this.allow(name, 80)) return;
+        this.burst(0.16, { gain: 0.2, hp: 80, lp: 700 });
+        this.tone(120, 0.14, { type: 'sine', gain: 0.12, slide: 0.4 });
+        break;
+      case 'poof':
+        if (!this.allow(name, 80)) return;
+        this.burst(0.3, { gain: 0.14, hp: 150, lp: 1200 });
+        break;
       case 'hit':
         if (!this.allow(name, 35)) return;
         this.tone(400 + r() * 300, 0.04, { type: 'square', gain: 0.04 });

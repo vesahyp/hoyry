@@ -2,6 +2,8 @@ import { solidShot, tileAt, idxAt } from './arena';
 import { cogLevel, damageTile, effect, explode, hurtEnemy, hurtHero, killEnemy, newId } from './combat';
 import type { Hero, SimState } from './state';
 import type { Gun, Held, Projectile, Team } from './types';
+import { isLob } from './guns';
+import { poolRadius, THROWN } from './content/thrown';
 
 /**
  * Firing and flight, shared by heroes, enemies and turrets. A shooter is
@@ -135,14 +137,27 @@ function emitShot(s: SimState, sh: Shooter, held: Held, angle: number, reach: nu
     const off = count > 1 ? g.spread * (i / (count - 1) - 0.5) : 0;
     const jitter = g.type === 'scatter' || g.type === 'lance' ? s.rng.range(-0.05, 0.05) : g.burst > 1 ? s.rng.range(-0.04, 0.04) : 0;
     const a = angle + off + jitter;
-    if (g.type === 'mortar') {
+    if (isLob(g.type)) {
       const dist = Math.max(50, reach * range);
       // Multi-shell mortars land in a small spread around the aim point.
-      const tx = sh.x + Math.cos(angle) * dist + (count > 1 ? Math.cos(a + Math.PI / 2) * off * 120 : 0);
-      const ty = sh.y + Math.sin(angle) * dist + (count > 1 ? Math.sin(a + Math.PI / 2) * off * 120 : 0);
+      let tx = sh.x + Math.cos(angle) * dist + (count > 1 ? Math.cos(a + Math.PI / 2) * off * 120 : 0);
+      let ty = sh.y + Math.sin(angle) * dist + (count > 1 ? Math.sin(a + Math.PI / 2) * off * 120 : 0);
+      // Clockwork in a lob: the shell steers onto an enemy near where it was going to land.
+      if (g.homing > 0 && !enemy) {
+        let bd = 70;
+        for (const e of s.enemies) {
+          const d = Math.hypot(e.x - tx, e.y - ty);
+          if (!e.dead && d < bd) {
+            bd = d;
+            tx = e.x;
+            ty = e.y;
+          }
+        }
+      }
       const p = baseProjectile(s, sh, g, sh.x, sh.y, a, 0, size, dmg, 0);
       p.lob = { sx: sh.x, sy: sh.y, tx, ty, t: 0, dur: (0.5 + dist / 800) * (enemy ? 1.5 : 1) };
-      p.blast = blast || 40;
+      p.blast = g.type === 'mortar' ? blast || 40 : blast;
+      p.pool = g.pool * (st ? st.blastMul : 1);
       s.projectiles.push(p);
       continue;
     }
@@ -183,6 +198,7 @@ function baseProjectile(s: SimState, sh: Shooter, g: Gun, x: number, y: number, 
     rarity: g.rarity,
     legend: g.legend,
     lob: null,
+    pool: 0,
     spin: 0,
     split: false,
     dead: false,
@@ -394,6 +410,16 @@ function land(s: SimState, p: Projectile): void {
     }
     return;
   }
+  // A thrown gun's lob: a splash if it has one, then the pool (content/thrown.ts).
+  const th = THROWN[p.gunType];
+  if (th) {
+    const color = POOL_COLOR[th.zone] ?? '#ffb040';
+    if (p.blast > 0) explode(s, x, y, p.blast, p.damage, p.team, p.owner, 160, color, true, `${p.gunType}:${p.maker}:blast`);
+    else effect(s, 'ring', x, y, p.pool * 0.5, color, 0.3);
+    s.zones.push({ id: newId(s), kind: th.zone, team: p.team, owner: p.owner, x, y, r: p.pool, dps: p.damage * th.dps, life: th.life, maxLife: th.life, element: p.element, tick: 0 });
+    s.sounds.push(th.land);
+    return;
+  }
   explode(s, x, y, p.blast, p.damage, p.team, p.owner, 220, p.team === 1 ? '#ff7050' : '#ffb040', true, `mortar:${p.maker}`);
   if (p.element === 'fire' || (p.team === 0 && p.maker === 'torpeedo' && p.legend === null && s.rng.chance(0.3))) {
     s.zones.push({ id: newId(s), kind: 'fire', team: p.team, owner: p.owner, x, y, r: p.blast * 0.8, dps: p.damage * 0.3, life: 3, maxLife: 3 });
@@ -422,12 +448,30 @@ function fragments(s: SimState, p: Projectile): void {
   }
 }
 
-/** Ground effects: fire, soot, löyly. */
+const POOL_COLOR: Partial<Record<string, string>> = { tar: '#3a2a14', dust: '#505058', vent: '#e8f0f8' };
+
+/** Ground effects: fire, soot, löyly, and the thrown guns' pools. */
 export function updateZones(s: SimState, dt: number): void {
   for (const z of s.zones) {
     z.life -= dt;
     if (z.kind === 'soot') {
       for (const e of s.enemies) if (!e.dead && Math.hypot(e.x - z.x, e.y - z.y) < z.r) e.blind = 0.3;
+      continue;
+    }
+    if ((z.kind === 'tar' || z.kind === 'dust' || z.kind === 'vent') && z.team === 0) {
+      // A pool hurts in ticks through hurtEnemy, so its element and its
+      // numbers show like any hit. Tar makes them wade, dust blinds, and
+      // the steam shoves them outward a little with every tick.
+      const r = poolRadius(z);
+      z.tick = (z.tick ?? 0) + dt;
+      const hit = z.tick >= 0.25;
+      if (hit) z.tick -= 0.25;
+      for (const e of s.enemies) {
+        if (e.dead || Math.hypot(e.x - z.x, e.y - z.y) > r + e.r * 0.5) continue;
+        if (z.kind === 'tar') e.tar = 0.25;
+        if (z.kind === 'dust') e.blind = Math.max(e.blind, 0.4);
+        if (hit) hurtEnemy(s, e, z.dps * 0.25, { owner: z.owner, element: z.element ?? 'none', legend: null, x: z.x, y: z.y, kb: z.kind === 'vent' ? 18 : 0, proc: false, charge: false });
+      }
       continue;
     }
     if (z.team === 0) {

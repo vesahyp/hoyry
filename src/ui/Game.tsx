@@ -6,7 +6,8 @@ import { COG_BY_ID, type CogDef } from '../game/content/cogs';
 import { BOSSES } from '../game/content/enemies';
 import { rollCogs, applyCog } from '../game/upgrades';
 import { maxAmmo } from '../game/weapons';
-import { RARITY_COLOR, TYPE_NAME } from '../game/guns';
+import { RARITY_COLOR, TYPE_NAME, hold, rollGun } from '../game/guns';
+import type { GunType } from '../game/types';
 import type { Gun } from '../game/types';
 import { Renderer } from '../render/renderer';
 import { InputController } from '../input/input';
@@ -94,6 +95,11 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
     const s = practice ? practiceRun(seed, heroes, asked) : newRun(seed, heroes);
     simRef.current = s;
     (window as unknown as { __sim: SimState }).__sim = s;
+    // For the Playwright scripts: put a rolled gun of `type` in the active hand.
+    (window as unknown as { __give: (type: GunType, rarity?: number) => void }).__give = (type, rarity = 1) => {
+      const h = s.heroes[0];
+      h.guns[h.active] = hold(rollGun(s.rng, s.floor, rarity, { type }));
+    };
     const renderer = new Renderer(canvas);
     s.view = renderer.view();
     const input = new InputController();

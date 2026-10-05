@@ -14,6 +14,7 @@ declare const process: { argv: string[]; exitCode?: number };
 import { generateArena, hitsSolid, idxAt, PIT, solidMove, WALL, type Arena } from '../src/game/arena';
 import { HERO_BY_ID } from '../src/game/content/heroes';
 import { GUN_TYPES, MAKERS, gunDps, hold, rollGun } from '../src/game/guns';
+import { FLOOR, T } from '../src/game/arena';
 import { Rng } from '../src/game/rng';
 import { DT, newRun, step } from '../src/game/sim';
 import { NO_INPUT } from '../src/game/state';
@@ -46,6 +47,53 @@ function gunTable(): void {
       }
     }
   }
+}
+
+/**
+ * Part one and a half: the same guns measured, not estimated. The Sweep
+ * stands in an open room and holds fire for ten seconds, auto-aimed, at
+ * dummies that neither move nor die: one at 100 px, then the pack from
+ * the super lab (five at 150 px). Each cell is the mean over the six
+ * makers at rarity 1, level 1, damage dealt in those ten seconds. The
+ * pack column is where a thrown gun earns its place; the one column is
+ * what it gives up for that.
+ */
+function gunLab(): void {
+  const SECONDS = 10;
+  const measure = (type: (typeof GUN_TYPES)[number], layout: [number, number][]): number => {
+    let total = 0;
+    for (const maker of MAKERS) {
+      const s = newRun(7, [HERO_BY_ID.nuohooja]);
+      const h = s.heroes[0];
+      const a = s.arena;
+      h.x = (a.w / 2) * T;
+      h.y = (a.h / 2) * T;
+      for (let ty = 1; ty < a.h - 1; ty++) for (let tx = 1; tx < a.w - 1; tx++) if (Math.hypot(tx * T - h.x, ty * T - h.y) < 14 * T) a.tiles[ty * a.w + tx] = FLOOR;
+      s.wavesLeft = 0;
+      s.marks = [];
+      s.enemies = layout.map(([x, y], i) => labDummy(900000 + i, h.x + x, h.y + y));
+      h.guns[0] = hold(rollGun(new Rng(99 + MAKERS.indexOf(maker)), 1, 1, { type, maker }));
+      h.invuln = 1e6;
+      for (let i = 0; i < 60 * SECONDS; i++) step(s, [{ ...NO_INPUT, fire: true }], DT);
+      for (const e of s.enemies) total += 1e6 - e.hp;
+    }
+    return total / MAKERS.length;
+  };
+  console.log('\nmeasured, 10 s of fire at dummies, mean over the makers at rarity 1:');
+  console.log('type         one@100    pack@150 (5)   pack/one');
+  for (const type of GUN_TYPES) {
+    const one = measure(type, LAYOUTS['one@100']);
+    const pack = measure(type, LAYOUTS['pack@150']);
+    console.log(`${type.padEnd(10)} ${one.toFixed(0).padStart(9)} ${pack.toFixed(0).padStart(13)} ${(pack / one).toFixed(2).padStart(10)}`);
+  }
+}
+
+function labDummy(id: number, x: number, y: number): Enemy {
+  return {
+    id, kind: 'rotta', x, y, vx: 0, vy: 0, r: 12, hp: 1e6, maxHp: 1e6, speed: 0, behaviour: 'swarm', touch: 0, held: null, elite: [], boss: false,
+    mode: 'chase', modeT: 0, cx: 0, cy: 0, seenX: x, seenY: y, lostFor: 0, aware: true, side: 1, burn: 0, burnDps: 0, slow: 0, tar: 0, blind: 0, stun: 0,
+    flash: 0, kx: 0, ky: 0, facing: 0, age: 10, dead: false,
+  };
 }
 
 // ————— part two: assertions —————
@@ -148,7 +196,7 @@ function checkFireDamagesEnemy(): void {
     side: 1,
     burn: 0,
     burnDps: 0,
-    slow: 0,
+    slow: 0, tar: 0,
     blind: 0,
     stun: 0,
     flash: 0,
@@ -263,7 +311,10 @@ function assertions(): void {
   checkGunPickupSwap();
 }
 
-if (process.argv[2] !== 'quick') gunTable();
+if (process.argv[2] !== 'quick') {
+  gunTable();
+  gunLab();
+}
 assertions();
 if (fails) {
   console.log(`\n${fails} failed`);

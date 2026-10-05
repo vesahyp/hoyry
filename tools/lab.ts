@@ -26,7 +26,7 @@ export const LAYOUTS: Record<string, [number, number][]> = {
 function dummy(id: number, x: number, y: number): Enemy {
   return {
     id, kind: 'rotta', x, y, vx: 0, vy: 0, r: 12, hp: 1e6, maxHp: 1e6, speed: 0, behaviour: 'swarm', touch: 0, held: null, elite: [], boss: false,
-    mode: 'chase', modeT: 0, cx: 0, cy: 0, seenX: x, seenY: y, lostFor: 0, aware: true, side: 1, burn: 0, burnDps: 0, slow: 0, blind: 0, stun: 0,
+    mode: 'chase', modeT: 0, cx: 0, cy: 0, seenX: x, seenY: y, lostFor: 0, aware: true, side: 1, burn: 0, burnDps: 0, slow: 0, tar: 0, blind: 0, stun: 0,
     flash: 0, kx: 0, ky: 0, facing: 0, age: 10, dead: false,
   };
 }

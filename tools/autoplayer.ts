@@ -1,5 +1,5 @@
 import { T, distanceField, flowDir, lineOfSight, openDir } from '../src/game/arena';
-import { gunScore } from '../src/game/guns';
+import { gunScore, isLob } from '../src/game/guns';
 import type { CogDef } from '../src/game/content/cogs';
 import type { Rng } from '../src/game/rng';
 import { NO_INPUT, type Hero, type HeroInput, type SimState } from '../src/game/state';
@@ -186,7 +186,7 @@ export function botInput(s: SimState, h: Hero, rng: Rng, who: Player = BOT): Her
       mx -= dx * 2;
       my -= dy * 2;
     }
-    if (td < range * 1.1 && (sees || g.type === 'mortar')) inp.fire = true;
+    if (td < range * 1.1 && (sees || isLob(g.type))) inp.fire = true;
     if (h.superCharge >= 1 && td < 220) inp.superFire = true;
   } else if (want) {
     const f = walkTo(s, h, want.x, want.y);
@@ -269,7 +269,7 @@ export function botInput(s: SimState, h: Hero, rng: Rng, who: Player = BOT): Her
     if (s.time - mem.lastTap < 1 / who.taps) inp.fire = false;
     else {
       mem.lastTap = s.time + rng.range(-0.04, 0.04);
-      if (who.aim > 0 && tgt && g.type !== 'mortar') {
+      if (who.aim > 0 && tgt && !isLob(g.type)) {
         const a = Math.atan2(tgt.y - h.y, tgt.x - h.x) + rng.range(-who.aim, who.aim);
         inp.aimX = Math.cos(a);
         inp.aimY = Math.sin(a);

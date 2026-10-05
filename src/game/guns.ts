@@ -2,6 +2,7 @@ import { L, type Text } from '../i18n';
 import type { Rng } from './rng';
 import type { Element, Gun, GunType, Held, Maker } from './types';
 import { LEGENDS } from './content/legends';
+import { THROWN } from './content/thrown';
 
 /**
  * Gun generation: type × maker × rarity. The type is the shape of the shot,
@@ -10,7 +11,9 @@ import { LEGENDS } from './content/legends';
  * (content/legends.ts) and break a rule.
  */
 
-export const GUN_TYPES: GunType[] = ['revolver', 'scatter', 'rifle', 'mortar', 'lance', 'saw'];
+export const GUN_TYPES: GunType[] = ['revolver', 'scatter', 'rifle', 'mortar', 'lance', 'saw', 'tar', 'dust', 'canister'];
+/** A lob: it flies over walls and lands where it is aimed, so it needs no line of sight and no aim line. */
+export const isLob = (type: GunType): boolean => type === 'mortar' || type in THROWN;
 export const MAKERS: Maker[] = ['paukku', 'kipina', 'rattaat', 'heittola', 'torpeedo', 'kello'];
 
 export const TYPE_NAME: Record<GunType, Text> = {
@@ -20,6 +23,9 @@ export const TYPE_NAME: Record<GunType, Text> = {
   mortar: L('mörssäri', 'Mortar'),
   lance: L('höyrykeihäs', 'Steam Lance'),
   saw: L('sirkkeli', 'Sawblade'),
+  tar: L('tervapullo', 'Tar Flask'),
+  dust: L('pölypommi', 'Dust Bomb'),
+  canister: L('höyrykanisteri', 'Steam Canister'),
 };
 
 export const MAKER_INFO: Record<Maker, { name: string; short: string; color: string; rule: Text }> = {
@@ -39,18 +45,22 @@ export const ELEMENT_COLOR: Record<Element, string> = { none: '#ffe9a8', fire: '
 type Base = Omit<Gun, 'id' | 'type' | 'maker' | 'rarity' | 'level' | 'name' | 'legend' | 'element'>;
 
 const BASE: Record<GunType, Base> = {
-  revolver: { damage: 24, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 560, range: 300, ammo: 3, reload: 0.95, lockout: 0.32, pierce: 0, bounces: 0, blast: 0, homing: 0, size: 5 },
-  scatter: { damage: 10, count: 5, spread: 0.6, burst: 1, burstGap: 0, speed: 500, range: 190, ammo: 3, reload: 1.25, lockout: 0.45, pierce: 0, bounces: 0, blast: 0, homing: 0, size: 4 },
-  rifle: { damage: 46, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 860, range: 430, ammo: 3, reload: 1.55, lockout: 0.55, pierce: 1, bounces: 0, blast: 0, homing: 0, size: 4 },
-  mortar: { damage: 36, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 0, range: 290, ammo: 3, reload: 1.65, lockout: 0.55, pierce: 0, bounces: 0, blast: 56, homing: 0, size: 8 },
-  lance: { damage: 7, count: 7, spread: 0.75, burst: 1, burstGap: 0, speed: 330, range: 130, ammo: 3, reload: 1.05, lockout: 0.4, pierce: 99, bounces: 0, blast: 0, homing: 0, size: 10 },
-  saw: { damage: 20, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 380, range: 380, ammo: 3, reload: 1.35, lockout: 0.45, pierce: 2, bounces: 3, blast: 0, homing: 0, size: 9 },
+  revolver: { damage: 24, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 560, range: 300, ammo: 3, reload: 0.95, lockout: 0.32, pierce: 0, bounces: 0, blast: 0, homing: 0, size: 5, pool: 0 },
+  scatter: { damage: 10, count: 5, spread: 0.6, burst: 1, burstGap: 0, speed: 500, range: 190, ammo: 3, reload: 1.25, lockout: 0.45, pierce: 0, bounces: 0, blast: 0, homing: 0, size: 4, pool: 0 },
+  rifle: { damage: 46, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 860, range: 430, ammo: 3, reload: 1.55, lockout: 0.55, pierce: 1, bounces: 0, blast: 0, homing: 0, size: 4, pool: 0 },
+  mortar: { damage: 36, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 0, range: 290, ammo: 3, reload: 1.65, lockout: 0.55, pierce: 0, bounces: 0, blast: 56, homing: 0, size: 8, pool: 0 },
+  lance: { damage: 7, count: 7, spread: 0.75, burst: 1, burstGap: 0, speed: 330, range: 130, ammo: 3, reload: 1.05, lockout: 0.4, pierce: 99, bounces: 0, blast: 0, homing: 0, size: 10, pool: 0 },
+  saw: { damage: 20, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 380, range: 380, ammo: 3, reload: 1.35, lockout: 0.45, pierce: 2, bounces: 3, blast: 0, homing: 0, size: 9, pool: 0 },
+  // The thrown guns (content/thrown.ts): a small splash or none, and a pool.
+  tar: { damage: 14, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 0, range: 270, ammo: 3, reload: 1.3, lockout: 0.5, pierce: 0, bounces: 0, blast: 30, homing: 0, size: 7, pool: 46 },
+  dust: { damage: 11, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 0, range: 250, ammo: 3, reload: 1.45, lockout: 0.55, pierce: 0, bounces: 0, blast: 0, homing: 0, size: 7, pool: 64 },
+  canister: { damage: 12, count: 1, spread: 0, burst: 1, burstGap: 0, speed: 0, range: 210, ammo: 3, reload: 1.4, lockout: 0.5, pierce: 0, bounces: 0, blast: 0, homing: 0, size: 7, pool: 78 },
 };
 
 const RARITY_MUL = [1, 1.15, 1.32, 1.52, 1.78];
 const RARITY_PARTS = [0, 1, 2, 3, 3];
 
-type Part = 'ammo' | 'reload' | 'damage' | 'count' | 'pierce' | 'bounce' | 'range' | 'speed' | 'element' | 'blast';
+type Part = 'ammo' | 'reload' | 'damage' | 'count' | 'pierce' | 'bounce' | 'range' | 'speed' | 'element' | 'blast' | 'pool';
 
 const PART_PREFIX: Record<Part, Text> = {
   ammo: L('Tilava', 'Roomy'),
@@ -63,6 +73,7 @@ const PART_PREFIX: Record<Part, Text> = {
   speed: L('Vinha', 'Swift'),
   element: L('Kiukkuinen', 'Spiteful'),
   blast: L('Räjähtävä', 'Explosive'),
+  pool: L('Laaja', 'Wide'),
 };
 
 const ELEMENT_PREFIX: Record<Element, Text> = { none: L(''), fire: L('Kuuma', 'Hot'), shock: L('Sähköinen', 'Live'), frost: L('Kylmä', 'Cold') };
@@ -86,7 +97,8 @@ export function rollGun(rng: Rng, level: number, rarity: number, opts: { type?: 
     if (pool.length) opts = { ...opts, legend: rng.pick(pool) };
   }
   const legend = opts.legend ? LEGENDS[opts.legend] : null;
-  const type = legend?.type ?? opts.type ?? rng.pick(GUN_TYPES);
+  // A thrown gun is a fifth of the drops: the works is a shooter first.
+  const type = legend?.type ?? opts.type ?? rng.weighted(GUN_TYPES, (x) => (THROWN[x] ? 0.5 : 1));
   const maker = legend?.maker ?? opts.maker ?? rng.pick(MAKERS);
   const g: Gun = { id: nextGunId++, type, maker, rarity, level, name: L(''), legend: opts.legend ?? null, element: 'none', ...BASE[type] };
 
@@ -104,9 +116,9 @@ export function rollGun(rng: Rng, level: number, rarity: number, opts: { type?: 
       g.damage *= 0.9;
       break;
     case 'rattaat':
-      g.burst = type === 'scatter' || type === 'lance' ? 2 : rng.int(3, 5);
-      g.burstGap = type === 'mortar' ? 0.12 : 0.07;
-      g.damage *= type === 'scatter' || type === 'lance' ? 0.6 : 1.25 / g.burst + 0.1;
+      g.burst = type === 'scatter' || type === 'lance' || THROWN[type] ? 2 : rng.int(3, 5);
+      g.burstGap = isLob(type) ? 0.12 : 0.07;
+      g.damage *= type === 'scatter' || type === 'lance' || THROWN[type] ? 0.6 : 1.25 / g.burst + 0.1;
       g.spread += 0.08;
       break;
     case 'heittola':
@@ -133,9 +145,10 @@ export function rollGun(rng: Rng, level: number, rarity: number, opts: { type?: 
   const parts: Part[] = [];
   const options: Part[] = ['ammo', 'reload', 'damage', 'range', 'speed'];
   if (type === 'scatter' || type === 'lance' || type === 'revolver') options.push('count');
-  if (type !== 'mortar' && type !== 'lance') options.push('pierce', 'bounce');
+  if (!isLob(type) && type !== 'lance') options.push('pierce', 'bounce');
   if (g.element === 'none' && maker !== 'paukku') options.push('element');
   if (type !== 'lance') options.push('blast');
+  if (THROWN[type]) options.push('pool', 'pool');
   for (let i = 0; i < RARITY_PARTS[rarity]; i++) {
     const p = rng.pick(options);
     parts.push(p);
@@ -172,6 +185,9 @@ export function rollGun(rng: Rng, level: number, rarity: number, opts: { type?: 
         break;
       case 'blast':
         g.blast = g.blast ? g.blast * 1.25 : 26;
+        break;
+      case 'pool':
+        g.pool *= 1.22;
         break;
     }
   }
@@ -211,12 +227,15 @@ export function hold(gun: Gun): Held {
  * connects). Pierce now only adds to the estimate for a single-projectile
  * gun; a multi-pellet gun's count already covers it. */
 export function gunDps(g: Gun): number {
-  const perShot = g.damage * g.count * g.burst * (g.blast ? 1.4 : 1) * (g.count === 1 && g.pierce > 0 ? 1 + 0.25 * Math.min(g.pierce, 3) : 1) * (g.element !== 'none' ? 1.15 : 1);
+  // A pool counts for half its life on one enemy: nothing stands in tar for long.
+  const th = THROWN[g.type];
+  const pool = th ? g.damage * th.dps * th.life * 0.5 : 0;
+  const perShot = (g.damage * (g.blast ? 1.4 : 1) + pool) * g.count * g.burst * (g.count === 1 && g.pierce > 0 ? 1 + 0.25 * Math.min(g.pierce, 3) : 1) * (g.element !== 'none' ? 1.15 : 1);
   const cycle = Math.max(g.lockout + (g.burst - 1) * g.burstGap, g.reload);
   return perShot / cycle;
 }
 
 /** A rough worth for the bot and for the sort: dps with a nudge for rarity. */
 export function gunScore(g: Gun): number {
-  return gunDps(g) * (1 + 0.04 * g.rarity) * (g.range > 250 ? 1.1 : 1);
+  return gunDps(g) * (1 + 0.04 * g.rarity) * (g.range > 250 ? 1.1 : 1) * (THROWN[g.type] ? 1.15 : 1);
 }

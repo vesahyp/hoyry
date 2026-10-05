@@ -1,6 +1,7 @@
 import { BARREL, BUSH, CRATE, CRATE_HP, PIT, T, VENT, WALL, type Arena } from '../game/arena';
 import { BOSSES, ENEMIES } from '../game/content/enemies';
-import { ELEMENT_COLOR, MAKER_INFO, RARITY_COLOR } from '../game/guns';
+import { ELEMENT_COLOR, isLob, MAKER_INFO, RARITY_COLOR } from '../game/guns';
+import { poolRadius } from '../game/content/thrown';
 import { hash2 } from '../game/rng';
 import type { Hero, SimState } from '../game/state';
 import type { Enemy, Projectile } from '../game/types';
@@ -292,6 +293,128 @@ export class Renderer {
         ctx.beginPath();
         ctx.arc(z.x, z.y - (1 - z.life / z.maxLife) * 10, z.r * (1.1 - z.life / z.maxLife * 0.3), 0, Math.PI * 2);
         ctx.fill();
+      } else if (z.kind === 'tar') {
+        // A glossy black puddle: lobes round a body, a lighter lip, two
+        // glints, slow bubbles. Cold tar is blue-black; burning tar carries
+        // small flames; live tar crackles.
+        const r = z.r;
+        const frost = z.element === 'frost';
+        const g = ctx.createRadialGradient(z.x - r * 0.2, z.y - r * 0.2, 0, z.x, z.y, r * 0.9);
+        g.addColorStop(0, frost ? 'rgba(60,80,120,0.92)' : 'rgba(92,62,26,0.92)');
+        g.addColorStop(0.5, frost ? 'rgba(34,44,70,0.92)' : 'rgba(44,30,12,0.92)');
+        g.addColorStop(1, frost ? 'rgba(20,26,44,0.92)' : 'rgba(18,12,6,0.92)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(z.x, z.y, r * 0.78, 0, Math.PI * 2);
+        for (let i = 0; i < 6; i++) {
+          const an = hash2(z.id, i) * Math.PI * 2;
+          const rr = r * (0.35 + hash2(z.id, i + 7) * 0.3);
+          ctx.moveTo(z.x + Math.cos(an) * rr, z.y + Math.sin(an) * rr);
+          ctx.arc(z.x + Math.cos(an) * rr, z.y + Math.sin(an) * rr * 0.8, r * (0.3 + hash2(z.id, i + 13) * 0.18), 0, Math.PI * 2);
+        }
+        ctx.fill();
+        ctx.strokeStyle = frost ? 'rgba(150,190,240,0.5)' : 'rgba(200,150,70,0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(z.x, z.y, r * 0.78, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,240,200,0.22)';
+        ctx.beginPath();
+        ctx.ellipse(z.x - r * 0.3, z.y - r * 0.28, r * 0.22, r * 0.09, -0.5, 0, Math.PI * 2);
+        ctx.ellipse(z.x + r * 0.25, z.y + r * 0.3, r * 0.1, r * 0.05, -0.5, 0, Math.PI * 2);
+        ctx.fill();
+        for (let i = 0; i < 3; i++) {
+          const ph = (this.t * 0.6 + hash2(z.id, i + 20)) % 1;
+          const an = hash2(z.id, i + 30) * Math.PI * 2;
+          const rr = hash2(z.id, i + 40) * r * 0.5;
+          ctx.fillStyle = `rgba(70,52,28,${0.9 * (1 - ph)})`;
+          ctx.beginPath();
+          ctx.arc(z.x + Math.cos(an) * rr, z.y + Math.sin(an) * rr * 0.8, 1.5 + ph * 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        if (z.element === 'fire') {
+          for (let i = 0; i < 4; i++) {
+            const an = hash2(z.id, i + 50) * Math.PI * 2;
+            const rr = hash2(z.id, i + 60) * r * 0.55;
+            const fh = 5 + Math.sin(this.t * 11 + i) * 2.5;
+            ctx.fillStyle = '#ff9a30';
+            ctx.beginPath();
+            ctx.ellipse(z.x + Math.cos(an) * rr, z.y + Math.sin(an) * rr - fh / 2, 2.5, fh, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else if (z.element === 'shock') {
+          ctx.strokeStyle = 'rgba(160,230,255,0.8)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          for (let i = 0; i < 3; i++) {
+            const an = hash2(z.id, i + 70, Math.floor(this.t * 9)) * Math.PI * 2;
+            const rr = r * 0.5;
+            ctx.moveTo(z.x + Math.cos(an) * rr * 0.4, z.y + Math.sin(an) * rr * 0.3);
+            ctx.lineTo(z.x + Math.cos(an) * rr, z.y + Math.sin(an) * rr * 0.8 - 4);
+          }
+          ctx.stroke();
+        }
+      } else if (z.kind === 'dust') {
+        // A coal-dust cloud: soft dark puffs that drift outward and thin,
+        // with a few bright motes; embers in it when the dust is hot.
+        const age = 1 - z.life / z.maxLife;
+        const gd = ctx.createRadialGradient(z.x, z.y, 0, z.x, z.y, z.r);
+        gd.addColorStop(0, 'rgba(90,84,98,0.45)');
+        gd.addColorStop(1, 'rgba(40,36,46,0)');
+        ctx.fillStyle = gd;
+        ctx.beginPath();
+        ctx.arc(z.x, z.y, z.r, 0, Math.PI * 2);
+        ctx.fill();
+        for (let i = 0; i < 9; i++) {
+          const an = hash2(z.id, i) * Math.PI * 2 + this.t * 0.25;
+          const rr = z.r * (0.15 + 0.55 * hash2(z.id, i + 9)) * (0.7 + 0.3 * age);
+          const pr = z.r * (0.32 + 0.14 * hash2(z.id, i + 18)) * (1 + age * 0.3);
+          ctx.fillStyle = i % 3 ? 'rgba(52,48,58,0.6)' : 'rgba(120,112,128,0.5)';
+          ctx.beginPath();
+          ctx.arc(z.x + Math.cos(an) * rr, z.y + Math.sin(an) * rr * 0.85 - age * 6, pr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        for (let i = 0; i < 6; i++) {
+          const ph = (this.t * 0.8 + hash2(z.id, i + 30)) % 1;
+          const an = hash2(z.id, i + 40) * Math.PI * 2;
+          const rr = z.r * 0.6 * ph;
+          ctx.fillStyle = z.element === 'fire' ? `rgba(255,150,50,${1 - ph})` : `rgba(200,200,210,${0.6 * (1 - ph)})`;
+          ctx.fillRect(z.x + Math.cos(an) * rr - 1, z.y + Math.sin(an) * rr * 0.8 - 1 - ph * 10, 2, 2);
+        }
+      } else if (z.kind === 'vent') {
+        // A steam canister: the can on the floor, and a white cloud that
+        // grows out of it, puffs rising off the top.
+        const r = poolRadius(z);
+        const g = ctx.createRadialGradient(z.x, z.y, 0, z.x, z.y, r);
+        g.addColorStop(0, 'rgba(240,244,250,0.72)');
+        g.addColorStop(0.7, 'rgba(230,236,246,0.4)');
+        g.addColorStop(1, 'rgba(230,236,246,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(z.x, z.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        for (let i = 0; i < 6; i++) {
+          const ph = (this.t * 0.9 + hash2(z.id, i + 5)) % 1;
+          const an = hash2(z.id, i + 15) * Math.PI * 2;
+          const rr = r * 0.5 * hash2(z.id, i + 25);
+          ctx.fillStyle = `rgba(250,252,255,${0.55 * (1 - ph)})`;
+          ctx.beginPath();
+          ctx.arc(z.x + Math.cos(an) * rr, z.y + Math.sin(an) * rr * 0.7 - ph * 26, 5 + ph * 9, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.save();
+        ctx.translate(z.x, z.y);
+        ctx.rotate(hash2(z.id, 99) * 6);
+        ctx.fillStyle = '#8a8e96';
+        ctx.strokeStyle = '#16120e';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(-7, -4, 14, 8, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#e8c95a';
+        ctx.fillRect(-1.5, -4, 3, 8);
+        ctx.restore();
       }
       ctx.globalAlpha = 1;
     }
@@ -347,13 +470,14 @@ export class Renderer {
       ctx.fillStyle = `rgba(255,60,40,${0.12 + f * 0.25})`;
       ctx.strokeStyle = 'rgba(255,80,60,0.85)';
       ctx.lineWidth = 2;
+      const rr = Math.max(pr.blast, pr.pool);
       ctx.beginPath();
-      ctx.arc(pr.lob.tx, pr.lob.ty, pr.blast, 0, Math.PI * 2);
+      ctx.arc(pr.lob.tx, pr.lob.ty, rr, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = 'rgba(255,60,40,0.35)';
       ctx.beginPath();
-      ctx.arc(pr.lob.tx, pr.lob.ty, pr.blast * f, 0, Math.PI * 2);
+      ctx.arc(pr.lob.tx, pr.lob.ty, rr * f, 0, Math.PI * 2);
       ctx.fill();
     }
     for (const e of s.enemies) {
@@ -369,7 +493,7 @@ export class Renderer {
         ctx.fillRect(0, -e.r, 300, e.r * 2);
         ctx.restore();
       } else if (e.held) {
-        const len = e.held.gun.type === 'mortar' ? 0 : Math.min(e.held.gun.range, 400);
+        const len = isLob(e.held.gun.type) ? 0 : Math.min(e.held.gun.range, 400);
         if (len) {
           // A clockwork gun telegraphs in brass: its shot will curve after you.
           const clockwork = e.held.gun.homing > 0;
@@ -921,7 +1045,7 @@ export class Renderer {
       const an = Math.atan2(show.y, show.x);
       const ready = held.ammo >= 1 && held.lock <= 0;
       const col = ready ? 'rgba(255,255,255,' : 'rgba(255,120,100,';
-      if (g.type === 'mortar') {
+      if (isLob(g.type)) {
         const reach = Math.max(0.2, Math.min(1, Math.hypot(show.x, show.y)));
         const tx = h.x + Math.cos(an) * reach * range;
         const ty = h.y + Math.sin(an) * reach * range;
@@ -935,7 +1059,7 @@ export class Renderer {
         ctx.setLineDash([]);
         ctx.fillStyle = col + '0.18)';
         ctx.beginPath();
-        ctx.arc(tx, ty, g.blast * h.stats.blastMul, 0, Math.PI * 2);
+        ctx.arc(tx, ty, Math.max(g.blast, g.pool) * h.stats.blastMul, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
       } else {
@@ -1082,6 +1206,8 @@ export class Renderer {
         ctx.rotate(p.spin);
         blit(ctx, gunSprite(p.gunType, p.maker, p.rarity), 0, 0);
         ctx.restore();
+      } else if (p.gunType === 'tar' || p.gunType === 'dust' || p.gunType === 'canister') {
+        thrownInFlight(ctx, p, p.x, p.y - hgt, col);
       } else {
         ctx.fillStyle = p.team === 1 ? '#3a2a2a' : '#2a2a2e';
         ctx.strokeStyle = p.team === 1 ? '#ff6040' : col;
@@ -1212,6 +1338,62 @@ export class Renderer {
     ctx.arc(p.x, p.y, p.r * 0.45, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+/** A thrown gun's lob in the air, tumbling: a tar bottle, a coal-dust ball with a lit fuse, a steam can. */
+function thrownInFlight(ctx: CanvasRenderingContext2D, p: Projectile, x: number, y: number, col: string): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(p.spin * 0.5);
+  ctx.strokeStyle = '#16120e';
+  ctx.lineWidth = 1.2;
+  if (p.gunType === 'tar') {
+    ctx.fillStyle = '#2a1a0c';
+    ctx.beginPath();
+    ctx.ellipse(0, 1, p.r * 0.9, p.r * 0.75, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillRect(-2, -p.r * 1.1, 4, p.r * 0.6);
+    ctx.strokeRect(-2, -p.r * 1.1, 4, p.r * 0.6);
+    ctx.fillStyle = col;
+    ctx.fillRect(-2.5, -p.r * 1.4, 5, 2.5);
+    ctx.fillStyle = 'rgba(255,240,200,0.45)';
+    ctx.beginPath();
+    ctx.ellipse(-p.r * 0.35, -p.r * 0.1, p.r * 0.22, p.r * 0.12, -0.6, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (p.gunType === 'dust') {
+    ctx.fillStyle = '#1c1c20';
+    ctx.beginPath();
+    ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(120,118,128,0.7)';
+    ctx.fillRect(-p.r * 0.5, -p.r * 0.45, 1.6, 1.6);
+    ctx.fillRect(p.r * 0.2, p.r * 0.1, 1.6, 1.6);
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(p.r * 0.5, -p.r * 0.6);
+    ctx.lineTo(p.r * 1.1, -p.r * 1.3);
+    ctx.stroke();
+    ctx.fillStyle = Math.sin(p.spin * 6) > 0 ? '#ffd040' : '#ff8a30';
+    ctx.beginPath();
+    ctx.arc(p.r * 1.2, -p.r * 1.45, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.fillStyle = '#8a8e96';
+    ctx.beginPath();
+    ctx.roundRect(-p.r * 0.7, -p.r * 1.1, p.r * 1.4, p.r * 2.2, 2.5);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = col;
+    ctx.fillRect(-p.r * 0.7, -p.r * 0.2, p.r * 1.4, p.r * 0.4);
+    ctx.fillStyle = 'rgba(250,252,255,0.7)';
+    ctx.beginPath();
+    ctx.arc(0, -p.r * 1.5, 2 + Math.sin(p.spin * 5), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function shadow(ctx: CanvasRenderingContext2D, x: number, y: number, rx: number, ry: number): void {

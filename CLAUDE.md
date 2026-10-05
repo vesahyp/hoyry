@@ -49,6 +49,8 @@ src/
       enemies.ts         the works' cast, bosses, elite affixes
       cogs.ts            the lift picks: rule and number changes
       legends.ts         orange guns: a fixed type/maker and one rule
+      thrown.ts          the thrown guns' pools: tar, coal dust, steam; what
+                           each does for how long, read by weapons.ts
   render/
     renderer.ts          3/4 view, row-sorted walls, HUD-adjacent drawing
     sprites.ts           procedural sprite cache
@@ -80,6 +82,9 @@ tools/
                            BOT (the floor) and HUMAN (a thumb on a phone)
   dbg/stuck.ts           map dump for a stuck floor; not committed
 scripts/shots.mjs        npm run shots: Playwright, iPhone 15, ?bot=1&speed=3
+scripts/ui-shots.mjs     make ui-shots: the slots at several gun levels, the
+                         pickup card and each super aim, portrait and landscape
+scripts/thrown-shots.mjs make thrown-shots: each thrown gun landing and its pool
 scripts/super-check.mjs  make super-check: each super tapped in a fight hits
 scripts/pickup-check.mjs make pickup-check: a gun pickup moves without a jump
 scripts/gauntlet-check.mjs make gauntlet-check: floors 6 to 8 on an emulated
@@ -129,9 +134,12 @@ scripts/gauntlet-check.mjs make gauntlet-check: floors 6 to 8 on an emulated
   The last three drive an emulated iPhone, so they need `make shots-setup`
   once. `sim-check` prints the gun table first; read it when you touched a
   gun maker, type or rarity curve.
-- **Balance with `make balance [FLOORS=10] [RUNS=2] [HERO=]`.** The bot
-  kites and takes better guns but has no plan. A change that moves the
-  bot's average floor moves the player's run the same way. `make deaths`
+- **Balance with `make balance [FLOORS=10] [RUNS=2] [HERO=] [START=]`.**
+  The bot kites and takes better guns but has no plan. A change that moves
+  the bot's average floor moves the player's run the same way. `START=` a
+  gun type starts every run with it, for weighing one type against the
+  rest; `sim-check` prints the same types measured in a lab (ten seconds
+  of fire at one dummy and at a pack) under the gun table. `make deaths`
   (same knobs) says what the damage came from, floor by floor: every hit
   on a hero carries its source through `hurtHero` (`s.onHurt`).
   `make gauntlet [FROM=6 TO=8 RUNS=8 HERO=]` is the player's floor: the

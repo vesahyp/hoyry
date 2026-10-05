@@ -293,6 +293,41 @@ export function gunSprite(type: GunType, maker: Maker, rarity: number): Sprite {
         }
         ell(c, 14, 0, 2, 2, acc, OUT, 0.6);
         break;
+      case 'tar':
+        // A sling arm with a stoppered bottle of tar on the end.
+        rect(c, -3, -1, 6, 5, wood, 1.5);
+        rect(c, 2, -1.5, 8, 3, metal, 1);
+        ell(c, 13, 0, 5, 4.4, '#2a1a0c', OUT, 1.1);
+        rect(c, 16.5, -1.5, 4, 3, '#2a1a0c', 1);
+        ell(c, 20.5, 0, 1.6, 1.9, acc, OUT, 0.8);
+        ell(c, 11.5, -1.5, 1.3, 0.8, 'rgba(255,240,200,0.5)', null);
+        break;
+      case 'dust':
+        // A cup launcher holding a coal-black ball, fuse lit.
+        rect(c, -4, -1, 7, 4.5, wood, 1.5);
+        rect(c, 2, -3, 6, 6, metal, 2);
+        ell(c, 13, 0, 5.5, 5.5, '#1c1c20', OUT, 1.1);
+        rect(c, 10.5, -2, 1.6, 1.6, '#6a6a74', 0.3, null);
+        rect(c, 14, 1.5, 1.6, 1.6, '#6a6a74', 0.3, null);
+        c.strokeStyle = acc;
+        c.lineWidth = 1.5;
+        c.beginPath();
+        c.moveTo(16, -4);
+        c.lineTo(19, -7);
+        c.stroke();
+        ell(c, 19.5, -7.5, 1.5, 1.5, '#ffb040', null);
+        break;
+      case 'canister':
+        // A short tube that lobs a riveted steam can with a brass valve.
+        rect(c, -3, -1, 6, 5, wood, 1.5);
+        rect(c, 2, -3, 6, 6, metal, 1.5);
+        rect(c, 8, -4, 11, 8, '#8a8e96', 3);
+        rect(c, 12, -4, 2, 8, acc, 0.5, null);
+        rivet(c, 10, -2);
+        rivet(c, 10, 2);
+        ell(c, 19.5, 0, 1.8, 1.8, acc, OUT, 0.8);
+        ell(c, 22, -3, 1.6, 1.3, 'rgba(240,240,250,0.7)', null);
+        break;
     }
     c.shadowBlur = 0;
   });

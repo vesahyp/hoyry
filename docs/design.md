@@ -74,6 +74,14 @@ A gun = **type** × **maker** × **rarity**, plus a name made from all three.
 | Mortar | lobs over walls and lands where you aim; bursts |
 | Steam lance | a short cone that hits everything in it, scalds |
 | Sawblade | a disc that ricochets off walls |
+| Tar Flask | thrown in an arc; leaves a tar pool that slows to a crawl and hurts a little |
+| Dust Bomb | thrown; a lingering coal-dust cloud that chokes and blinds |
+| Steam Canister | thrown short; hisses and grows into a scalding cloud that shoves |
+
+The three thrown types share the mortar's lob (over walls, lands where
+aimed, led by the target's movement) and leave a pool instead of a blast
+(`content/thrown.ts`). They are area control: weak on one enemy, strong on
+a pack, and the maker's element rides on the pool. A fifth of drops.
 
 **Makers** decide the behaviour. Each has a colour and a rule:
 

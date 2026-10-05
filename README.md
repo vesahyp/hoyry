@@ -70,6 +70,14 @@ kaikista kolmesta.
 | Mörssäri | lentää seinien yli ja räjähtää maaliin |
 | Höyrykeihäs | lyhyt kartio, osuu kaikkeen sisällään, polttaa höyryllä |
 | Sirkkeli | levy, joka pomppii seinistä |
+| Tervapullo | heitetään kaaressa seinien yli; jättää tervalammikon, jossa viholliset tahmaantuvat |
+| Pölypommi | heitetään; pöllähtää hiilipölypilveksi, joka tukahduttaa ja sokaisee |
+| Höyrykanisteri | heitetään lähelle; suhisee ja kasvaa höyrypilveksi, joka polttaa ja työntää |
+
+Heitettävät aseet (kolme viimeistä) tähtäävät siihen, missä vihollinen on
+kun heitto putoaa, samoin mörssäri. Lammikon alkuaine on valmistajan:
+Kipinän tervapullo jättää palavaa, kylmää tai sähköistä tervaa. Laaja-osa
+kasvattaa lammikkoa.
 
 | Valmistaja | Sääntö |
 |------------|--------|
@@ -175,13 +183,23 @@ Finnish time, the week on Monday. The score is also kept on the device, with
 or without a network.
 
 **Guns** are a type (revolver, scattergun, rifle, mortar, steam lance,
-sawblade) times a maker (Paukku & Poika for raw damage, Kipinä for an
+sawblade, and three thrown ones: tar flask, dust bomb, steam canister)
+times a maker (Paukku & Poika for raw damage, Kipinä for an
 element, Rattaanpää for bursts, Heittola for a thrown gun that explodes,
 Torpeedo for a gun where every shot explodes, Kellosepät for homing shots)
 times a rarity (grey, green, blue, purple, orange). Orange guns are named
 and break a rule: the Coffee Pot heals you, the Cuckoo Clock's sixth shot
 will not give up, Granny's Umbrella blocks shots while you hold your fire,
 and four more.
+
+**The thrown guns** fly in an arc over walls, like the mortar, and leave
+something where they land instead of a blast. The tar flask leaves a tar
+pool that enemies wade through at a crawl. The dust bomb bursts into a
+coal-dust cloud that chokes and blinds whatever stands in it. The steam
+canister is thrown short, hisses and grows into a cloud of steam that scalds
+and shoves. All three, and the mortar, aim at where an enemy will be when
+the throw lands. The pool takes the maker's element: a Kipinä tar flask
+leaves burning, cold or live tar. A Wide part grows the pool.
 
 **Enemy shots** are big and slow, and a sidestep beats them. A **clockwork
 (Kellosepät) shot** is brass, ticks as it leaves the gun, and the gunner aims

@@ -3,7 +3,7 @@ import type { Text } from '../i18n';
 /** 0 the hero side, 1 the works. Bullets hit the other team only. */
 export type Team = 0 | 1;
 
-export type GunType = 'revolver' | 'scatter' | 'rifle' | 'mortar' | 'lance' | 'saw';
+export type GunType = 'revolver' | 'scatter' | 'rifle' | 'mortar' | 'lance' | 'saw' | 'tar' | 'dust' | 'canister';
 export type Maker = 'paukku' | 'kipina' | 'rattaat' | 'heittola' | 'torpeedo' | 'kello';
 export type Element = 'none' | 'fire' | 'shock' | 'frost';
 
@@ -46,6 +46,8 @@ export interface Gun {
   homing: number;
   /** projectile radius */
   size: number;
+  /** thrown guns: the radius of what the lob leaves on the ground (content/thrown.ts); 0 for the rest */
+  pool: number;
 }
 
 /** A gun in a hand: the gun plus its ammo and timers. */
@@ -88,8 +90,10 @@ export interface Projectile {
   maker: Maker;
   rarity: number;
   legend: string | null;
-  /** mortar: start, target and flight time */
+  /** mortar and the thrown guns: start, target and flight time */
   lob: { sx: number; sy: number; tx: number; ty: number; t: number; dur: number } | null;
+  /** thrown guns: the pool radius this lob leaves */
+  pool: number;
   /** saw spin for the renderer */
   spin: number;
   /** shot from a gun with the split rule: break into fragments on impact */
@@ -134,6 +138,8 @@ export interface Enemy {
   burn: number;
   burnDps: number;
   slow: number;
+  /** seconds left of wading through tar: much slower than `slow`, and they stack */
+  tar: number;
   blind: number;
   stun: number;
   flash: number;
@@ -162,10 +168,14 @@ export interface Drop {
   pull: boolean;
 }
 
-/** Ground effects: burning ground, steam vents' puffs, soot clouds, turrets. */
+/** Ground effects: burning ground, steam vents' puffs, soot clouds, and what the thrown guns leave (content/thrown.ts). */
 export interface Zone {
   id: number;
-  kind: 'fire' | 'soot' | 'steam' | 'shock';
+  kind: 'fire' | 'soot' | 'steam' | 'shock' | 'tar' | 'dust' | 'vent';
+  /** thrown guns' pools: the element that rides on every damage tick */
+  element?: Element;
+  /** thrown guns' pools: time toward the next damage tick */
+  tick?: number;
   team: Team;
   owner: number;
   x: number;

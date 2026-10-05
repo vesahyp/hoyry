@@ -3,7 +3,7 @@ import { BUSH, T, flowDir, freeSpot, generateArena, lineOfSight, moveCircle, ope
 import { cogLevel, effect, explode, heal, hurtEnemy, hurtHero, killEnemy, nearestTarget, newId, text } from './combat';
 import { AFFIXES, BOSSES, ENEMIES } from './content/enemies';
 import type { HeroDef } from './content/heroes';
-import { hold, rollGun, MAKERS, MAKER_INFO, RARITY_COLOR } from './guns';
+import { hold, isLob, rollGun, MAKERS, MAKER_INFO, RARITY_COLOR } from './guns';
 import { createState, type Hero, type HeroInput, type SimState } from './state';
 import type { Enemy, Gun, GunType, Held, Maker } from './types';
 import { doSuper, flySuper, planSuper } from './supers';
@@ -225,7 +225,7 @@ function updateHero(s: SimState, h: Hero, inp: HeroInput, dt: number): void {
       reach = aimLen;
     } else {
       const range = g.range * h.stats.rangeMul;
-      const tgt = nearestTarget(s, h.x, h.y, range * 1.15, g.type !== 'mortar');
+      const tgt = nearestTarget(s, h.x, h.y, range * 1.15, !isLob(g.type));
       if (tgt) {
         angle = Math.atan2(tgt.y - h.y, tgt.x - h.x);
         reach = Math.hypot(tgt.x - h.x, tgt.y - h.y) / range;
@@ -310,7 +310,7 @@ function updateTurret(s: SimState, tu: SimState['turrets'][number], dt: number):
   tickHeld(tu.held, dt, h, true);
   fireBursts(s, sh, tu.held, dt);
   const g = tu.held.gun;
-  const tgt = nearestTarget(s, tu.x, tu.y, g.range, g.type !== 'mortar');
+  const tgt = nearestTarget(s, tu.x, tu.y, g.range, !isLob(g.type));
   if (tgt) {
     tu.facing = Math.atan2(tgt.y - tu.y, tgt.x - tu.x);
     tryAttack(s, sh, tu.held, tu.facing, Math.hypot(tgt.x - tu.x, tgt.y - tu.y) / g.range);
@@ -471,6 +471,7 @@ function makeEnemy(s: SimState, kind: string, x0: number, y0: number, r: number,
     burn: 0,
     burnDps: 0,
     slow: 0,
+    tar: 0,
     blind: 0,
     stun: 0,
     flash: 0,
@@ -520,6 +521,7 @@ function updateEnemy(s: SimState, e: Enemy, dt: number): void {
     }
   }
   e.slow = Math.max(0, e.slow - dt);
+  e.tar = Math.max(0, e.tar - dt);
   e.blind = Math.max(0, e.blind - dt);
   e.stun = Math.max(0, e.stun - dt);
   // Knockback moves the body first, then decays.
@@ -552,7 +554,7 @@ function updateEnemy(s: SimState, e: Enemy, dt: number): void {
     e.seenY = h.y;
     e.lostFor = 0;
   } else e.lostFor += dt;
-  const speed = e.speed * (e.slow > 0 ? 0.5 : 1);
+  const speed = e.speed * (e.slow > 0 ? 0.5 : 1) * (e.tar > 0 ? 0.4 : 1);
   e.modeT -= dt;
 
   // Walk toward (or away from) the hero: straight when in sight, else down the flow.
@@ -720,6 +722,7 @@ function orb(s: SimState, e: Enemy, angle: number, speed: number, dmg: number, r
     rarity: 0,
     legend: null,
     lob: null,
+    pool: 0,
     spin: 0,
     split: false,
     dead: false,
@@ -749,6 +752,7 @@ function lobAt(s: SimState, e: Enemy, tx: number, ty: number, dmg: number, blast
     rarity: 0,
     legend: null,
     lob: { sx: e.x, sy: e.y, tx, ty, t: 0, dur },
+    pool: 0,
     spin: 0,
     split: false,
     dead: false,

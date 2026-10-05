@@ -1,5 +1,6 @@
 import { t, tr } from '../i18n';
 import { LEGENDS } from '../game/content/legends';
+import { THROWN } from '../game/content/thrown';
 import type { CogDef } from '../game/content/cogs';
 import { gunDps, MAKER_INFO, RARITY_COLOR, RARITY_NAME, TYPE_NAME } from '../game/guns';
 import type { Gun } from '../game/types';
@@ -10,12 +11,14 @@ const ELEMENT_NAME = { fire: () => tr('tuli', 'fire'), shock: () => tr('sähkö'
 export function gunTraits(g: Gun): string[] {
   const out: string[] = [];
   if (g.legend) out.push(t(LEGENDS[g.legend].rule));
+  const th = THROWN[g.type];
+  if (th) out.push(t(th.rule));
   out.push(t(MAKER_INFO[g.maker].rule));
   if (g.element !== 'none' && g.maker !== 'kipina') out.push(tr(`Alkuaine: ${ELEMENT_NAME[g.element]()}.`, `Element: ${ELEMENT_NAME[g.element]()}.`));
   if (g.maker === 'kipina') out.push(tr(`Tämä: ${ELEMENT_NAME[g.element]()}.`, `This one: ${ELEMENT_NAME[g.element]()}.`));
   if (g.pierce > 0 && g.pierce < 50 && g.type !== 'lance') out.push(tr(`Läpäisee ${g.pierce}.`, `Pierces ${g.pierce}.`));
   if (g.bounces > 0 && g.type !== 'saw') out.push(tr(`Kimpoaa ${g.bounces}.`, `Bounces ${g.bounces}.`));
-  if (g.blast > 0 && g.type !== 'mortar' && g.maker !== 'torpeedo') out.push(tr('Räjähtää.', 'Explodes.'));
+  if (g.blast > 0 && g.type !== 'mortar' && g.type !== 'tar' && g.maker !== 'torpeedo') out.push(tr('Räjähtää.', 'Explodes.'));
   return out;
 }
 
