@@ -1,7 +1,8 @@
 import { newRun, step, nextFloor, DT } from '../src/game/sim';
 import { HEROES, HERO_BY_ID } from '../src/game/content/heroes';
 import { rollCogs, applyCog } from '../src/game/upgrades';
-import { gunDps } from '../src/game/guns';
+import { gunDps, hold, rollGun } from '../src/game/guns';
+import type { GunType } from '../src/game/types';
 import { Rng } from '../src/game/rng';
 import { botInput, botPickCog } from './autoplayer';
 import { t } from '../src/i18n';
@@ -9,18 +10,23 @@ import { t } from '../src/i18n';
 declare const process: { argv: string[]; exitCode?: number };
 
 /**
- * npm run balance [floors] [runs] [hero]: bot runs, one line per run.
+ * npm run balance [floors] [runs] [hero] [start]: bot runs, one line per run.
  * The bot is a floor, not a player; read the trend, not the number.
+ * `start` is a gun type the hero starts with instead of its own, for
+ * weighing a gun type against the rest: the bot keeps a gun it finds no
+ * better than, so the start gun is the one it carries longest.
  */
 const maxFloor = Number(process.argv[2] ?? 15);
 const runs = Number(process.argv[3] ?? 2);
 const only = process.argv[4];
+const start = process.argv[5] as GunType | undefined;
 const heroes = only ? [HERO_BY_ID[only]] : HEROES;
 
 for (const def of heroes) {
   for (let r = 0; r < runs; r++) {
     const seed = 1000 + r * 7 + def.id.length;
     const s = newRun(seed, [def]);
+    if (start) s.heroes[0].guns[0] = hold(rollGun(s.rng, 1, 1, { type: start }));
     const bot = new Rng(seed ^ 0x5151);
     const floorTimes: number[] = [];
     let last = 0;
