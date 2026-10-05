@@ -8,17 +8,21 @@ import { practiceRun } from './build';
 declare const process: { argv: string[]; exitCode?: number };
 
 /**
- * npm run gauntlet [from] [to] [runs] [hero]: the hard floors, played by
+ * npm run gauntlet [from] [to] [runs] [hero] [start]: the hard floors, played by
  * the human profile of the bot (a reaction time, a thumb, a tap rate, an
  * aim a little off) from a build a run has by then (tools/build.ts). One
  * line per hero with how many runs cleared each floor, then the share of
  * runs that cleared the whole stretch. The check fails under NEED: the
  * floors have to be beatable by a person on a phone, most of the time.
+ * `start` (`legend@level` or `type@level`) puts that gun in the hand in
+ * place of the found one: `veturi@5` asks whether a floor-5 Locomotive
+ * still carries floors 11 to 13.
  */
 const from = Number(process.argv[2] ?? 6);
 const to = Number(process.argv[3] ?? 8);
 const runs = Number(process.argv[4] ?? 8);
 const only = process.argv[5];
+const start = process.argv[6];
 const heroes = only ? [HERO_BY_ID[only]] : HEROES;
 const NEED = 0.6;
 
@@ -31,7 +35,7 @@ for (const def of heroes) {
   const died: string[] = [];
   for (let r = 0; r < runs; r++) {
     const seed = 2000 + r * 11 + def.id.length;
-    const s = practiceRun(seed, [def], from);
+    const s = practiceRun(seed, [def], from, HUMAN, start);
     const bot = new Rng(seed ^ 0x5151);
     let last = '';
     s.onHurt = (_h, _d, src) => (last = src);

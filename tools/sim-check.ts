@@ -61,7 +61,7 @@ function gunTable(): void {
  */
 function gunLab(): void {
   const SECONDS = 10;
-  const measure = (type: (typeof GUN_TYPES)[number] | null, layout: [number, number][], legend?: string): number => {
+  const measure = (type: (typeof GUN_TYPES)[number] | null, layout: [number, number][], legend?: string, level = 1, rarity = 1): number => {
     let total = 0;
     for (const maker of legend ? [MAKERS[0]] : MAKERS) {
       const s = newRun(7, [HERO_BY_ID.nuohooja]);
@@ -73,7 +73,7 @@ function gunLab(): void {
       s.wavesLeft = 0;
       s.marks = [];
       s.enemies = layout.map(([x, y], i) => labDummy(900000 + i, h.x + x, h.y + y));
-      h.guns[0] = hold(legend ? rollGun(new Rng(99), 1, 4, { legend }) : rollGun(new Rng(99 + MAKERS.indexOf(maker)), 1, 1, { type: type!, maker }));
+      h.guns[0] = hold(legend ? rollGun(new Rng(99), level, 4, { legend }) : rollGun(new Rng(99 + MAKERS.indexOf(maker)), level, rarity, { type: type!, maker }));
       h.invuln = 1e6;
       for (let i = 0; i < 60 * SECONDS; i++) step(s, [{ ...NO_INPUT, fire: true }], DT);
       for (const e of s.enemies) total += 1e6 - e.hp;
@@ -96,6 +96,23 @@ function gunLab(): void {
     const pack = measure(null, LAYOUTS['pack@150'], id);
     const line = measure(null, LAYOUTS['line'], id);
     console.log(`${id.padEnd(10)} ${one.toFixed(0).padStart(9)} ${pack.toFixed(0).padStart(13)} ${line.toFixed(0).padStart(10)} ${(pack / one).toFixed(2).padStart(10)}`);
+  }
+  // An early orange against what drops ten floors deeper: the Locomotive
+  // found on floor 5 (level 5) against every type at level 15, grey to
+  // purple. A deeper gun has to win on one target, and should at least
+  // hold its own on a line, the Locomotive's own ground.
+  console.log('\nthe Locomotive at level 5 against level 15 drops, the same lab (one@100 / line):');
+  const v5 = { one: measure(null, LAYOUTS['one@100'], 'veturi', 5), line: measure(null, LAYOUTS['line'], 'veturi', 5) };
+  const v15 = { one: measure(null, LAYOUTS['one@100'], 'veturi', 15), line: measure(null, LAYOUTS['line'], 'veturi', 15) };
+  console.log(`veturi L5   one ${v5.one.toFixed(0).padStart(6)}  line ${v5.line.toFixed(0).padStart(6)}      veturi L15  one ${v15.one.toFixed(0)}  line ${v15.line.toFixed(0)}`);
+  console.log('type @L15    grey one/line   green one/line   blue one/line   purple one/line   (x = L5 veturi / this)');
+  for (const type of GUN_TYPES) {
+    const cells = [0, 1, 2, 3].map((r) => {
+      const one = measure(type, LAYOUTS['one@100'], undefined, 15, r);
+      const line = measure(type, LAYOUTS['line'], undefined, 15, r);
+      return `${one.toFixed(0)}/${line.toFixed(0)} x${(v5.one / one).toFixed(2)}`.padEnd(18);
+    });
+    console.log(type.padEnd(12) + cells.join(''));
   }
 }
 

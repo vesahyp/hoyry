@@ -142,10 +142,12 @@ scripts/gauntlet-check.mjs make gauntlet-check: floors 6 to 8 on an emulated
   of fire at one dummy and at a pack) under the gun table. `make deaths`
   (same knobs) says what the damage came from, floor by floor: every hit
   on a hero carries its source through `hurtHero` (`s.onHurt`).
-  `make gauntlet [FROM=6 TO=8 RUNS=8 HERO=]` is the player's floor: the
+  `make gauntlet [FROM=6 TO=8 RUNS=8 HERO=] [START=]` is the player's floor: the
   bot with a person's limits (`HUMAN` in `tools/autoplayer.ts`) from the
   build a run has by then (`tools/build.ts`), and it fails under 60 %
-  clears. A floor band the gauntlet fails is unfair, not hard.
+  clears. A floor band the gauntlet fails is unfair, not hard. `START=`
+  (`veturi@5`, `rifle@10`) puts that gun in the hand instead of the found
+  one: the way to ask whether an early gun still carries deep floors.
 - **URL knobs for testing:** `?seed=N` fixes the run, `?floor=N` starts
   on floor N with a typical build (a practice run: no leaderboard),
   `?bot=1` plays the bot, `?bot=human` the bot with a person's limits,
