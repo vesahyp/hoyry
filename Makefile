@@ -14,6 +14,7 @@
 #   make shots-setup   # once: install Playwright
 #   make shots         # phone screenshots into shots/
 #   make shots-en      # the same in English, into shots/en/
+#   make ui-shots      # the slots at several gun levels, the pickup card and each hero's super aim, portrait and landscape, into shots/ui/
 #   make touch-check   # taps through the menus on an emulated phone
 #   make pickup-check  # a gun pickup on an emulated iPhone: the card slides in and flies to its slot without a jump
 #   make super-check   # each hero's super, tapped in a fight on an emulated iPhone, hits
@@ -31,7 +32,7 @@ PROF     = $(if $(PROFILE),AWS_PROFILE=$(PROFILE) ,)
 AWS      = $(PROF)aws
 TF       = $(PROF)terraform -chdir=infra
 
-.PHONY: env board-check pause-check touch-check super-check pickup-check supers deaths gauntlet gauntlet-check dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
+.PHONY: env board-check pause-check touch-check ui-shots super-check pickup-check supers deaths gauntlet gauntlet-check dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
 
 dev:
 	npm run dev
@@ -95,6 +96,9 @@ board-check:
 
 shots-en:
 	node scripts/shots.mjs en
+
+ui-shots:
+	node scripts/ui-shots.mjs
 
 plan:
 	$(TF) init
