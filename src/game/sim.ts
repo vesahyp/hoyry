@@ -162,7 +162,14 @@ export function step(s: SimState, inputs: HeroInput[], dt = DT): void {
 
   updateWaves(s, dt);
   updateMarks(s, dt);
-  for (const e of s.enemies) updateEnemy(s, e, dt);
+  for (const e of s.enemies) {
+    // The velocity an enemy moved at this step, for leading a lob.
+    const px = e.x;
+    const py = e.y;
+    updateEnemy(s, e, dt);
+    e.vx = (e.x - px) / dt;
+    e.vy = (e.y - py) / dt;
+  }
   separate(s);
   for (const tu of s.turrets) updateTurret(s, tu, dt);
   s.turrets = s.turrets.filter((x) => x.life > 0);
@@ -227,8 +234,17 @@ function updateHero(s: SimState, h: Hero, inp: HeroInput, dt: number): void {
       const range = g.range * h.stats.rangeMul;
       const tgt = nearestTarget(s, h.x, h.y, range * 1.15, !isLob(g.type));
       if (tgt) {
-        angle = Math.atan2(tgt.y - h.y, tgt.x - h.x);
-        reach = Math.hypot(tgt.x - h.x, tgt.y - h.y) / range;
+        let tx = tgt.x;
+        let ty = tgt.y;
+        if (isLob(g.type)) {
+          // A lob lands where they will be, not where they are: lead by
+          // most of its flight time (weapons.ts: 0.5 s plus the distance).
+          const dur = 0.5 + Math.hypot(tgt.x - h.x, tgt.y - h.y) / 800;
+          tx += tgt.vx * dur * 0.8;
+          ty += tgt.vy * dur * 0.8;
+        }
+        angle = Math.atan2(ty - h.y, tx - h.x);
+        reach = Math.hypot(tx - h.x, ty - h.y) / range;
       }
     }
     tryAttack(s, sh, held, angle, reach);
