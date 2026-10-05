@@ -575,8 +575,8 @@ export class Renderer {
           break;
         }
         case 'target':
-          // The super locked on: a reticle that closes on the spot.
-          reticle(ctx, ef.x, ef.y, ef.r * (0.8 + f * 0.8), (1 - f) * 2, hexA(ef.color, f));
+          // The super locked on: the sight closes on the spot and fades.
+          sight(ctx, ef.x, ef.y, ef.r * (0.8 + f * 0.8), (1 - f) * 4, f);
           break;
         case 'dash':
           ctx.strokeStyle = hexA('#202024', f * 0.7);
@@ -953,58 +953,36 @@ export class Renderer {
     }
     // The super's plan, while it is charged: where a tap lands. Faint
     // while the thumb is elsewhere, bright while it drags the button.
+    // All of it is the player's gold and all of it is round: a lane with
+    // rounded ends, a soft disc that breathes, a trail of puffs along a
+    // leap, a brass sight on the enemy it locked. Nothing here is dashed
+    // or square, so it never reads as the thin dotted brass line a
+    // clockwork gunner draws from itself before it fires.
     const plan = h.superPlan;
     if (plan.on) {
       const k = show.superOn ? 1 : 0.7;
-      ctx.strokeStyle = `rgba(255,210,60,${0.85 * k})`;
-      ctx.fillStyle = `rgba(255,210,60,${0.2 * k})`;
-      ctx.lineWidth = 2.5;
+      const pulse = 0.5 + 0.5 * Math.sin(this.t * 5);
       switch (h.def.super) {
         case 'dash': {
-          const w = h.r + DASH.width;
-          ctx.save();
-          ctx.translate(h.x, h.y);
-          ctx.rotate(plan.angle);
-          ctx.fillRect(0, -w, plan.dist, w * 2);
-          ctx.strokeRect(0, -w, plan.dist, w * 2);
-          ctx.setLineDash([5, 6]);
-          ctx.beginPath();
-          ctx.arc(plan.dist, 0, DASH.burstR, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.restore();
+          lane(ctx, h.x, h.y, plan.angle, plan.dist, h.r + DASH.width, this.t, k);
+          const ex = h.x + Math.cos(plan.angle) * plan.dist;
+          const ey = h.y + Math.sin(plan.angle) * plan.dist;
+          disc(ctx, ex, ey, DASH.burstR, pulse, k * 0.75);
           break;
         }
         case 'leap':
-          ctx.beginPath();
-          ctx.moveTo(h.x, h.y);
-          ctx.quadraticCurveTo((h.x + plan.x) / 2, (h.y + plan.y) / 2 - 90, plan.x, plan.y);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(plan.x, plan.y, LEAP.r, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
+          puffs(ctx, h.x, h.y, plan.x, plan.y, 90, 9, this.t, k);
+          disc(ctx, plan.x, plan.y, LEAP.r, pulse, k);
           break;
         case 'slam':
-          if (plan.dist > 8) {
-            ctx.beginPath();
-            ctx.moveTo(h.x, h.y);
-            ctx.lineTo(plan.x, plan.y);
-            ctx.stroke();
-          }
-          ctx.beginPath();
-          ctx.arc(plan.x, plan.y, SLAM.r, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
+          if (plan.dist > 8) puffs(ctx, h.x, h.y, plan.x, plan.y, 26, 5, this.t, k);
+          disc(ctx, plan.x, plan.y, SLAM.r, pulse, k);
           break;
         case 'turret':
-          ctx.beginPath();
-          ctx.arc(h.x + Math.cos(plan.angle) * TURRET.ahead, h.y + Math.sin(plan.angle) * TURRET.ahead, 14, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
+          cog(ctx, h.x + Math.cos(plan.angle) * TURRET.ahead, h.y + Math.sin(plan.angle) * TURRET.ahead, 13, this.t, k);
           break;
       }
-      if (plan.locked >= 0) reticle(ctx, plan.x, plan.y, 20 + Math.sin(this.t * 8) * 2, this.t, '#ffd23c');
+      if (plan.locked >= 0) sight(ctx, plan.x, plan.y, 20 + Math.sin(this.t * 8) * 2, this.t, k);
     }
     void s;
   }
@@ -1256,20 +1234,152 @@ function nearestHero(s: SimState, e: Enemy): Hero | null {
   return best;
 }
 
-/** A gun-sight ring with four ticks, turned by `turn` radians. */
-function reticle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, turn: number, color: string): void {
-  ctx.strokeStyle = color;
+/*
+ * The player's super aim, in one gold (the super button's), at alpha `k`.
+ * Glows are radial gradients, never shadowBlur, which a phone pays for on
+ * every frame.
+ */
+const TAU = Math.PI * 2;
+const gold = (a: number) => `rgba(255,214,90,${Math.max(0, Math.min(1, a))})`;
+
+/** A brass sight: a soft glow, a ring, four rounded ticks outside it that turn slowly, a point in the middle. */
+function sight(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, turn: number, k: number): void {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.7);
+  g.addColorStop(0, gold(0.3 * k));
+  g.addColorStop(0.55, gold(0.12 * k));
+  g.addColorStop(1, gold(0));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(x, y, r * 1.7, 0, TAU);
+  ctx.fill();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = gold(0.9 * k);
   ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.arc(x, y, r, 0, TAU);
   ctx.stroke();
+  ctx.lineWidth = 3.5;
   ctx.beginPath();
   for (let i = 0; i < 4; i++) {
-    const a = turn + (i * Math.PI) / 2;
-    ctx.moveTo(x + Math.cos(a) * (r - 6), y + Math.sin(a) * (r - 6));
-    ctx.lineTo(x + Math.cos(a) * (r + 7), y + Math.sin(a) * (r + 7));
+    const a = turn * 0.5 + (i * Math.PI) / 2;
+    ctx.moveTo(x + Math.cos(a) * (r + 4), y + Math.sin(a) * (r + 4));
+    ctx.lineTo(x + Math.cos(a) * (r + 10), y + Math.sin(a) * (r + 10));
   }
   ctx.stroke();
+  ctx.lineCap = 'butt';
+  ctx.fillStyle = `rgba(255,248,210,${0.9 * k})`;
+  ctx.beginPath();
+  ctx.arc(x, y, 2.2, 0, TAU);
+  ctx.fill();
+}
+
+/** Where a blast lands: a disc lit toward its rim, a brass edge that breathes with `pulse`, a faint inner ring. */
+function disc(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, pulse: number, k: number): void {
+  const g = ctx.createRadialGradient(x, y, r * 0.15, x, y, r);
+  g.addColorStop(0, gold(0.05 * k));
+  g.addColorStop(0.72, gold(0.11 * k));
+  g.addColorStop(1, gold(0.3 * k));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, TAU);
+  ctx.fill();
+  ctx.strokeStyle = gold((0.5 + 0.35 * pulse) * k);
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, TAU);
+  ctx.stroke();
+  ctx.strokeStyle = gold(0.22 * k);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(x, y, r - 6, 0, TAU);
+  ctx.stroke();
+}
+
+/** The dash's run: a lane with rounded ends, lit at its edges, with soft chevrons drifting the way it goes. */
+function lane(ctx: CanvasRenderingContext2D, x: number, y: number, angle: number, len: number, w: number, t: number, k: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  const g = ctx.createLinearGradient(0, -w, 0, w);
+  g.addColorStop(0, gold(0.3 * k));
+  g.addColorStop(0.5, gold(0.07 * k));
+  g.addColorStop(1, gold(0.3 * k));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.roundRect(-w * 0.4, -w, len + w * 0.4, w * 2, w);
+  ctx.fill();
+  ctx.strokeStyle = gold(0.65 * k);
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 2.5;
+  const step = 30;
+  const off = (t * 50) % step;
+  for (let d = off + 8; d < len - 4; d += step) {
+    // Faint at both ends of the lane, full in the middle.
+    const edge = Math.min(1, (d - 4) / 40, (len - d) / 40);
+    ctx.strokeStyle = gold(0.5 * k * Math.max(0, edge));
+    ctx.beginPath();
+    ctx.moveTo(d - 6, -7);
+    ctx.lineTo(d, 0);
+    ctx.lineTo(d - 6, 7);
+    ctx.stroke();
+  }
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  ctx.restore();
+}
+
+/** A jump's path: puffs of steam along an arc `lift` high, growing toward the landing and drifting that way. */
+function puffs(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, lift: number, n: number, t: number, k: number): void {
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2 - lift;
+  const drift = (t * 0.7) % 1;
+  for (let i = 0; i < n; i++) {
+    const u = (i + drift) / n;
+    const v = 1 - u;
+    const px = v * v * x1 + 2 * v * u * mx + u * u * x2;
+    const py = v * v * y1 + 2 * v * u * my + u * u * y2;
+    ctx.fillStyle = gold((0.2 + 0.5 * u) * k);
+    ctx.beginPath();
+    ctx.arc(px, py, 2 + 3.5 * u, 0, TAU);
+    ctx.fill();
+  }
+}
+
+/** Where the turret stands: a small brass cog, turning. */
+function cog(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, t: number, k: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 2);
+  g.addColorStop(0, gold(0.35 * k));
+  g.addColorStop(1, gold(0));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 2, 0, TAU);
+  ctx.fill();
+  ctx.rotate(t * 0.8);
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = gold(0.85 * k);
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, TAU);
+  ctx.stroke();
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const a = (i * TAU) / 8;
+    ctx.moveTo(Math.cos(a) * (r + 1), Math.sin(a) * (r + 1));
+    ctx.lineTo(Math.cos(a) * (r + 5), Math.sin(a) * (r + 5));
+  }
+  ctx.stroke();
+  ctx.fillStyle = gold(0.55 * k);
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.35, 0, TAU);
+  ctx.fill();
+  ctx.lineCap = 'butt';
+  ctx.restore();
 }
 
 function hexA(hex: string, a: number): string {
