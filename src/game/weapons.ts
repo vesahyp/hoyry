@@ -274,7 +274,7 @@ export function updateProjectiles(s: SimState, dt: number): void {
       // over the last), which made standing on it worth three guns.
       const old = s.zones.find((z) => z.kind === 'fire' && z.team === 0 && z.r === 20 && Math.hypot(z.x - p.x, z.y - p.y) < 24);
       if (old) old.life = old.maxLife;
-      else s.zones.push({ id: newId(s), kind: 'fire', team: 0, owner: p.owner, x: p.x, y: p.y, r: 20, dps: p.damage * 0.35, life: 2.5, maxLife: 2.5 });
+      else s.zones.push({ id: newId(s), kind: 'fire', team: 0, owner: p.owner, x: p.x, y: p.y, r: 20, dps: p.damage * 0.2, life: 2, maxLife: 2 });
     }
     if (p.life <= 0) {
       if (p.blast > 0) impact(s, p, p.x, p.y);

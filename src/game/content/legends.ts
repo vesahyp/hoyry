@@ -70,11 +70,15 @@ export const LEGENDS: Record<string, LegendDef> = {
     type: 'rifle',
     maker: 'torpeedo',
     rule: L('Laukaus menee kaiken läpi ja jättää palavan raiteen.', 'The shot goes through everything and leaves a burning track.'),
+    // A weak rifle per hit: its worth is that every hit is on everything
+    // in the line, plus the track. At 1.2 a floor-5 one out-hit every
+    // green gun from floor 15 and carried floors 11 to 13 better than
+    // the guns found there.
     apply: (g) => {
       g.pierce = 99;
       g.blast = 0;
       g.speed = 700;
-      g.damage *= 1.2;
+      g.damage *= 0.7;
     },
   },
   voimala: {
