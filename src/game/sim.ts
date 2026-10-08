@@ -9,6 +9,7 @@ import type { Enemy, Gun, GunType, Held, Maker } from './types';
 import { aftershock, doSuper, flySuper, planSuper, retireTurret, superNums } from './supers';
 import { computeStats } from './upgrades';
 import { fireBursts, maxAmmo, tickHeld, tryAttack, updateProjectiles, updateZones, type Shooter } from './weapons';
+import { updateTraining } from './training';
 
 export const DT = 1 / 60;
 
@@ -161,7 +162,8 @@ export function step(s: SimState, inputs: HeroInput[], dt = DT): void {
     updateFlow(s.arena, alive.length ? alive : s.heroes);
   }
 
-  updateWaves(s, dt);
+  if (s.training) updateTraining(s, dt);
+  else updateWaves(s, dt);
   updateMarks(s, dt);
   for (const e of s.enemies) {
     // The velocity an enemy moved at this step, for leading a lob.
@@ -542,6 +544,8 @@ function updateEnemy(s: SimState, e: Enemy, dt: number): void {
       return;
     }
   }
+  // A dummy is staked to the floor: no knockback moves it off its post.
+  if (e.behaviour === 'dummy') e.kx = e.ky = 0;
   e.slow = Math.max(0, e.slow - dt);
   e.tar = Math.max(0, e.tar - dt);
   e.blind = Math.max(0, e.blind - dt);
@@ -662,6 +666,9 @@ function updateEnemy(s: SimState, e: Enemy, dt: number): void {
     }
     case 'boss':
       boss(s, e, h, dx, dy, dist, sees, go, sh!, dt);
+      break;
+    case 'dummy':
+      e.facing = Math.atan2(dy, dx);
       break;
   }
 }

@@ -39,6 +39,8 @@ export const ENEMIES: Record<string, EnemyDef> = {
   mortteli: { id: 'mortteli', name: L('Mörssärimiehistö', 'Mortar Crew'), behaviour: 'mortar', hp: 46, speed: 58, r: 13, touch: 0, gun: { type: 'mortar' }, dmgMul: 0.45, pause: 1.6, points: 5, floor: 4, weight: 1.6, dropGun: 0.35, color: '#4a6a4a' },
   torni: { id: 'torni', name: L('Tykkitorni', 'Gun Tower'), behaviour: 'turret', hp: 110, speed: 0, r: 15, touch: 0, gun: { type: 'revolver', maker: 'rattaat' }, dmgMul: 0.32, pause: 1.3, points: 6, floor: 5, weight: 1, dropGun: 0.5, color: '#7a7a6a' },
   kaukoputki: { id: 'kaukoputki', name: L('Kaukoputki', 'Spyglass'), behaviour: 'gunner', hp: 36, speed: 74, r: 11, touch: 0, gun: { type: 'rifle' }, dmgMul: 0.36, pause: 1.4, points: 5, floor: 6, weight: 1.4, dropGun: 0.4, color: '#2a4a6a' },
+  // The training dummy: floor Infinity keeps it out of every wave; training.ts places it.
+  nukke: { id: 'nukke', name: L('Harjoitusnukke', 'Training Dummy'), behaviour: 'dummy', hp: 70, speed: 0, r: 12, touch: 0, dmgMul: 0, pause: 0, points: 0, floor: Infinity, weight: 0, dropGun: 0, color: '#b08a5a' },
   kipinakone: { id: 'kipinakone', name: L('Kipinäkone', 'Spark Engine'), behaviour: 'gunner', hp: 60, speed: 84, r: 13, touch: 0, gun: { type: 'saw', maker: 'kipina' }, dmgMul: 0.36, pause: 1.2, points: 6, floor: 8, weight: 1.2, dropGun: 0.4, color: '#3a6a8a' },
 };
 

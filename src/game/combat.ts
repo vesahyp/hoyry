@@ -142,6 +142,8 @@ export function heal(s: SimState, h: Hero, amount: number): void {
 
 export function hurtHero(s: SimState, h: Hero, dmg: number, x: number, y: number, kb = 0, src = 'other'): void {
   if (!h.alive || h.invuln > 0 || h.leap || h.dash) return;
+  // The training ground: nothing there hurts.
+  if (s.training) return;
   let d = dmg * (1 - h.stats.armor);
   if (h.shield > 0) d *= 0.3;
   h.hp -= d;
@@ -244,8 +246,9 @@ export function dropAt(s: SimState, x: number, y: number, kind: 'coin' | 'steam'
   s.drops.push({ id: newId(s), kind, x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, value, gun: null, age: 0, pull: s.phase !== 'fight' });
 }
 
-export function dropGun(s: SimState, x: number, y: number, rarity: number, opts: Parameters<typeof rollGun>[3] = {}): void {
-  const g = rollGun(s.rng, s.floor, rarity, opts);
+/** `level` is the gun's level, the floor it dropped on by default; the training ground varies it. */
+export function dropGun(s: SimState, x: number, y: number, rarity: number, opts: Parameters<typeof rollGun>[3] = {}, level = s.floor): void {
+  const g = rollGun(s.rng, level, rarity, opts);
   const ang = s.rng.range(0, Math.PI * 2);
   s.drops.push({ id: newId(s), kind: 'gun', x, y, vx: Math.cos(ang) * 60, vy: Math.sin(ang) * 60, value: 0, gun: g, age: 0, pull: false });
   if (rarity >= 3) {
@@ -268,6 +271,8 @@ export function killEnemy(s: SimState, e: Enemy, owner: number): void {
   const luck = s.heroes.reduce((m, x) => Math.max(m, x.stats.luck), 0);
   const coinMul = s.heroes.reduce((m, x) => Math.max(m, x.stats.coinMul), 1);
   // Coins every time, steam sometimes (more from floor 6, where nothing heals by itself), guns from the ones that carried one.
+  // A training dummy drops nothing: the ground's own drops are what there is to pick up.
+  if (s.training) return;
   const coins = Math.max(1, Math.round((e.boss ? 40 : e.elite.length ? 8 : ENEMIES[e.kind]?.points ?? 1) * coinMul));
   for (let i = 0; i < Math.min(coins, 8); i++) dropAt(s, e.x, e.y, 'coin', Math.ceil(coins / Math.min(coins, 8)));
   if (s.rng.chance(e.boss ? 1 : e.elite.length ? 0.6 : s.floor >= 6 ? 0.4 : 0.06)) dropAt(s, e.x, e.y, 'steam', e.boss ? 40 : s.floor >= 6 ? 30 : 14);

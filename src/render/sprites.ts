@@ -345,6 +345,23 @@ export function enemySprite(kind: string, color: string, frame: number, big = 1)
       ell(c, x - r * 0.3, y - r * 0.3, r * 0.35, r * 0.35, '#ffe0c0', null);
     };
     switch (kind) {
+      case 'nukke': {
+        // a training dummy: a sack body on a wooden post, a painted target
+        rect(c, -1.5, 2, 3, 12, '#5a3a1a', 1, null);
+        rect(c, -7, 11, 14, 3, '#4a2e14', 1.5);
+        ell(c, 0, -1, 8, 9, color);
+        ell(c, 0, -1, 5.5, 5.5, '#f0e0c0', null);
+        ell(c, 0, -1, 3.5, 3.5, '#c83a2a', null);
+        ell(c, 0, -1, 1.5, 1.5, '#f0e0c0', null);
+        ell(c, 0, -12, 4, 3.5, shade(color, -0.2));
+        c.strokeStyle = '#3a2a1a';
+        c.lineWidth = 1;
+        c.beginPath();
+        c.moveTo(-6 - step * 0.3, -6);
+        c.lineTo(6 + step * 0.3, -6);
+        c.stroke();
+        break;
+      }
       case 'rotta': {
         // a clockwork rat: brass body, cog ear, wire tail
         c.strokeStyle = '#8a7a6a';

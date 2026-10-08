@@ -101,7 +101,8 @@ export interface Projectile {
   dead: boolean;
 }
 
-export type Behaviour = 'swarm' | 'gunner' | 'brute' | 'bomber' | 'mortar' | 'turret' | 'boss';
+/** 'dummy' is the training ground's target: it stands at its post and does nothing (training.ts). */
+export type Behaviour = 'swarm' | 'gunner' | 'brute' | 'bomber' | 'mortar' | 'turret' | 'boss' | 'dummy';
 
 export interface Enemy {
   id: number;

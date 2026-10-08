@@ -24,6 +24,8 @@ import { fireBursts, tryAttack, type Shooter } from '../src/game/weapons';
 import { t } from '../src/i18n';
 import { botInput } from './autoplayer';
 import { LAYOUTS, lab } from './lab';
+import { DUMMY, RESPAWN, trainingRun } from '../src/game/training';
+import { hurtEnemy, hurtHero } from '../src/game/combat';
 
 let fails = 0;
 const check = (name: string, ok: boolean, extra = '') => {
@@ -327,7 +329,35 @@ function checkSupers(): void {
   check('a dash dragged away from the only enemy goes away from it', lab('nuohooja', LAYOUTS['one@100'], { x: -1, y: 0 }).hits === 0);
 }
 
+/** The training ground: dummies stand, a broken one returns, drops come, nothing hurts and the floor never ends. */
+function checkTraining(): void {
+  const s = trainingRun(5, [HERO_BY_ID.nuohooja]);
+  const h = s.heroes[0];
+  const run = (sec: number) => {
+    for (let i = 0; i < 60 * sec; i++) step(s, [NO_INPUT], DT);
+  };
+  run(3);
+  const dummies = () => s.enemies.filter((e) => !e.dead && e.kind === DUMMY);
+  const posts = s.training!.posts.length;
+  check('training: every post has a dummy after 3 s', dummies().length === posts, `${dummies().length}/${posts}`);
+  const moved = dummies().every((e) => s.training!.posts.some((p) => Math.hypot(p.x - e.x, p.y - e.y) < 20));
+  check('training: the dummies stand on their posts', moved);
+  const d = dummies()[0];
+  hurtEnemy(s, d, 1e6, { owner: 0, element: 'none', legend: null, x: h.x, y: h.y, kb: 300, proc: true });
+  run(0.1);
+  check('training: a hit breaks a dummy and drops nothing', dummies().length === posts - 1 && s.drops.length === 0, `${dummies().length} dummies, ${s.drops.length} drops`);
+  run(RESPAWN + 1.2);
+  check(`training: the dummy is back ${RESPAWN} s later`, dummies().length === posts, `${dummies().length}/${posts}`);
+  run(20);
+  const guns = s.drops.filter((x) => x.kind === 'gun').length;
+  check('training: guns drop at random', guns >= 1 && guns <= 5, `${guns} on the floor`);
+  hurtHero(s, h, 1e6, h.x + 10, h.y, 300, 'test');
+  check('training: nothing hurts the hero', h.alive && h.hp === h.stats.maxHp && !s.gameOver);
+  check('training: the floor never clears', s.phase === 'fight' && s.floor === 1);
+}
+
 function assertions(): void {
+  checkTraining();
   checkSupers();
   checkDeterminism();
   checkArenas();

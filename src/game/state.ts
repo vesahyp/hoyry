@@ -2,6 +2,7 @@ import { Rng } from './rng';
 import type { Arena } from './arena';
 import type { HeroDef } from './content/heroes';
 import type { Drop, Effect, Enemy, FloatText, Held, Projectile, RunStats, Turret, Zone } from './types';
+import type { Training } from './training';
 
 export interface HeroStats {
   maxHp: number;
@@ -167,6 +168,8 @@ export interface SimState {
   cam: { x: number; y: number };
   /** slow motion left, seconds: a boss kill and the last kill of a floor */
   slowmo: number;
+  /** the training ground (training.ts): no waves, no lift, no death; null in a run */
+  training: Training | null;
   /** every hit on a hero, after armour, with what dealt it: for the tools (npm run deaths); null in the game */
   onHurt: ((h: Hero, dmg: number, src: string) => void) | null;
 }
@@ -207,6 +210,7 @@ export function createState(seed: number, arena: Arena): SimState {
     view: { w: 420, h: 760 },
     cam: { x: 0, y: 0 },
     slowmo: 0,
+    training: null,
     onHurt: null,
   };
 }
