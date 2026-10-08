@@ -46,6 +46,30 @@ try {
     await page.waitForTimeout(400);
     await page.screenshot({ path: `${dir}/pause-guide.png` });
 
+    // The training ground: the dummies up, a drop on the floor, a dummy
+    // broken and its post waiting, and the pause menu's way out.
+    await page.goto(`http://localhost:${port}/?lang=en&seed=3`);
+    await page.getByRole('button', { name: 'Training ground' }).tap();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `${dir}/train-pick.png` });
+    await page.getByRole('button', { name: /The Engineer/ }).tap();
+    await page.waitForFunction(() => window.__sim && window.__sim.enemies.length >= 5 && window.__sim.drops.length >= 1, null, { timeout: 15000 });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: `${dir}/train.png` });
+    await page.evaluate(() => {
+      const s = window.__sim;
+      const e = s.enemies[0];
+      e.burn = 1;
+      e.burnDps = 1e6;
+      const h = s.heroes[0];
+      h.superCharge = 1;
+    });
+    await page.waitForTimeout(1500);
+    await page.screenshot({ path: `${dir}/train-broken.png` });
+    await page.locator('.iconbtn.pause').tap();
+    await page.waitForSelector('.overlay');
+    await page.screenshot({ path: `${dir}/train-pause.png` });
+
     await ctx.close();
   }
 } finally {

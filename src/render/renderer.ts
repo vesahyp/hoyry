@@ -449,6 +449,21 @@ export class Renderer {
       }
     }
 
+    // The training ground's posts: a bare stake where a broken dummy will stand again.
+    if (s.training) {
+      for (const p of s.training.posts) {
+        if (s.enemies.some((e) => !e.dead && Math.hypot(e.x - p.x, e.y - p.y) < 20)) continue;
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y + 6, 9, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#5a3a1a';
+        ctx.fillRect(p.x - 2, p.y - 10, 4, 16);
+        ctx.fillStyle = '#4a2e14';
+        ctx.fillRect(p.x - 7, p.y + 4, 14, 3);
+      }
+    }
+
     // Spawn hatches: steam rising where something is about to climb out.
     for (const m of s.marks) {
       const f = Math.max(0, 1 - m.t);

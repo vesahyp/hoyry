@@ -44,6 +44,8 @@ src/
     supers.ts            the four supers: their numbers by level
                          (superNums), the auto-aim (planSuper, every step
                          while charged) and the dash, leap and hop in flight
+    training.ts          the training ground: a room of dummies that stand and
+                           return, random drops, no waves, no lift, no death
     content/
       heroes.ts          the four playable heroes, their super and passive
       enemies.ts         the works' cast, bosses, elite affixes
@@ -58,6 +60,8 @@ src/
   ui/
     Game.tsx             the game loop (fixed step), HUD, overlays
     Screens.tsx          title, hero select, the leaderboard, death
+    Guide.tsx            how to play: every control drawn with its own element;
+                           a screen from the title, a body inside the pause menu
     Initials.tsx         three letters for the leaderboard, the rank line
     Cards.tsx            gun and cog cards
     Update.tsx           the newer-build banner
@@ -85,6 +89,8 @@ scripts/shots.mjs        npm run shots: Playwright, iPhone 15, ?bot=1&speed=3
 scripts/ui-shots.mjs     make ui-shots: the slots at several gun levels, the
                          pickup card and each super aim, portrait and landscape
 scripts/thrown-shots.mjs make thrown-shots: each thrown gun landing and its pool
+scripts/guide-shots.mjs  make guide-shots: the guide and the training ground, portrait
+                         and landscape
 scripts/super-check.mjs  make super-check: each super tapped in a fight hits
 scripts/pickup-check.mjs make pickup-check: a gun pickup moves without a jump
 scripts/gauntlet-check.mjs make gauntlet-check: floors 6 to 8 on an emulated
@@ -155,7 +161,8 @@ scripts/gauntlet-check.mjs make gauntlet-check: floors 6 to 8 on an emulated
 - `make shots` / `make shots-en` for phone screenshots (Playwright, iPhone
   15, `?bot=1&speed=3&seed=`), never from a hand-held browser.
 - `make touch-check` when you touch a menu or the input: it taps through
-  the pause menu, the swap button and the lift cog pick on an emulated phone,
+  the pause menu, the swap button, the lift cog pick, the guide and the
+  training ground on an emulated phone,
   then scrolls every menu with a finger in landscape. The touch
   handler blocks the default action of play-field touches, so a menu
   needs `data-ui` (or to be a button or inside `.overlay`) to be tappable.

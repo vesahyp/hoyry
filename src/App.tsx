@@ -9,7 +9,7 @@ import { ErrorBoundary } from './ui/ErrorBoundary';
 import { BUILD, BUILD_NAME } from './version';
 import { lang, setLang, t } from './i18n';
 
-type Screen = { kind: 'title' } | { kind: 'select' } | { kind: 'records' } | { kind: 'guide' } | { kind: 'run'; hero: HeroDef; seed: number } | { kind: 'dead'; r: RunSummary; rank: number; heroBest: boolean };
+type Screen = { kind: 'title' } | { kind: 'select'; training: boolean } | { kind: 'records' } | { kind: 'guide' } | { kind: 'run'; hero: HeroDef; seed: number; training: boolean } | { kind: 'dead'; r: RunSummary; rank: number; heroBest: boolean };
 
 export default function App() {
   return (
@@ -27,9 +27,9 @@ function Screens() {
     window.scrollTo(0, 0);
   }, [screen.kind]);
 
-  const start = (hero: HeroDef) => {
+  const start = (hero: HeroDef, training = false) => {
     const asked = Number(new URLSearchParams(location.search).get('seed'));
-    setScreen({ kind: 'run', hero, seed: asked || (Date.now() ^ (Math.random() * 1e9)) >>> 0 });
+    setScreen({ kind: 'run', hero, seed: asked || (Date.now() ^ (Math.random() * 1e9)) >>> 0, training });
   };
 
   let body;
@@ -38,7 +38,8 @@ function Screens() {
       body = (
         <Title
           records={records}
-          onPlay={() => setScreen({ kind: 'select' })}
+          onPlay={() => setScreen({ kind: 'select', training: false })}
+          onTrain={() => setScreen({ kind: 'select', training: true })}
           onRecords={() => setScreen({ kind: 'records' })}
           onGuide={() => setScreen({ kind: 'guide' })}
           onLang={(l) => {
@@ -49,7 +50,7 @@ function Screens() {
       );
       break;
     case 'select':
-      body = <Select records={records} onPick={start} onBack={() => setScreen({ kind: 'title' })} />;
+      body = <Select records={records} training={screen.training} onPick={(h) => start(h, screen.training)} onBack={() => setScreen({ kind: 'title' })} />;
       break;
     case 'records':
       body = <RecordsScreen records={records} onBack={() => setScreen({ kind: 'title' })} />;
@@ -63,7 +64,8 @@ function Screens() {
           key={screen.seed}
           heroes={[screen.hero]}
           seed={screen.seed}
-          onQuit={() => setScreen({ kind: 'select' })}
+          training={screen.training}
+          onQuit={() => setScreen(screen.training ? { kind: 'title' } : { kind: 'select', training: false })}
           onRestart={() => start(screen.hero)}
           onEnd={(r) => {
             // A practice run (?floor=N) is not a record, here or on the board.
@@ -89,7 +91,7 @@ function Screens() {
       );
       break;
     case 'dead':
-      body = <Death r={screen.r} rank={screen.rank} heroBest={screen.heroBest} onAgain={() => start(screen.r.hero)} onMenu={() => setScreen({ kind: 'select' })} />;
+      body = <Death r={screen.r} rank={screen.rank} heroBest={screen.heroBest} onAgain={() => start(screen.r.hero)} onMenu={() => setScreen({ kind: 'select', training: false })} />;
       break;
   }
   return (

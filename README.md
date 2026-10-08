@@ -13,7 +13,11 @@ game follows your browser's language.*
 ## Miten pelataan
 
 Alkuvalikon **Näin pelataan** piirtää jokaisen napin ja kertoo mitä se tekee.
-Sama ohje aukeaa taukovalikosta kesken pelin.
+Sama ohje aukeaa taukovalikosta kesken pelin. **Harjoituskenttä** on pieni
+huone, jossa nuket eivät ammu eivätkä liiku: rikottu nukke nousee tolppaansa
+muutamassa sekunnissa, ja aseita, höyryä ja rattaita putoilee lattialle
+kokeiltavaksi. Siellä ei kuole, eikä siitä tule tulosta. **Lopeta harjoitus**
+yläreunassa palaa valikkoon.
 
 **Puhelimella:** vasen peukalo kävelee. Oikealla peukalolla napautus ampuu
 lähintä näkyvää vihollista, veto näyttää tähtäysviivan ja laukaisee kun
@@ -173,7 +177,11 @@ shot you with.
 **Play: https://vesahyp.github.io/hoyry/**
 
 **How to play** on the title screen draws every button and says what it
-does. The same guide opens from the pause menu mid-run.
+does. The same guide opens from the pause menu mid-run. **Training ground**
+is a small room where the dummies do not shoot or move: a broken dummy
+stands up again at its post a few seconds later, and guns, steam and cogs
+drop on the floor to try. Nothing there kills you and no score is kept.
+**End practice** at the top returns to the menu.
 
 **Touch:** left thumb walks. Right thumb: tap fires at the nearest enemy you
 can see, drag shows an aim line and fires on release. The star button on

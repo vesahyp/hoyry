@@ -37,7 +37,7 @@ function HeroPortrait({ d, size = 72 }: { d: HeroDef; size?: number }) {
   return <canvas ref={ref} style={{ width: size, height: size }} />;
 }
 
-export function Title({ records, onPlay, onRecords, onGuide, onLang }: { records: Records; onPlay: () => void; onRecords: () => void; onGuide: () => void; onLang: (l: Lang) => void }) {
+export function Title({ records, onPlay, onTrain, onRecords, onGuide, onLang }: { records: Records; onPlay: () => void; onTrain: () => void; onRecords: () => void; onGuide: () => void; onLang: (l: Lang) => void }) {
   return (
     <div className="screen title">
       <div className="cogs" aria-hidden>
@@ -62,9 +62,21 @@ export function Title({ records, onPlay, onRecords, onGuide, onLang }: { records
           {RECORDS_ON ? tr('Tulostaulu', 'Leaderboard') : tr('Ennätykset', 'Records')}
         </button>
       )}
-      <button className="btn" onClick={onGuide}>
-        {tr('Näin pelataan', 'How to play')}
-      </button>
+      <div className="row pair">
+        <button className="btn half" onClick={onGuide}>
+          {tr('Näin pelataan', 'How to play')}
+        </button>
+        <button
+          className="btn half"
+          onClick={() => {
+            audio.unlock();
+            audio.play('tap');
+            onTrain();
+          }}
+        >
+          {tr('Harjoituskenttä', 'Training ground')}
+        </button>
+      </div>
       {records.deepest > 0 && <p className="small">{tr(`Syvin kerros: ${records.deepest}`, `Deepest floor: ${records.deepest}`)}</p>}
       <div className="row">
         <button className="btn ghost" onClick={() => onLang(lang() === 'fi' ? 'en' : 'fi')}>
@@ -76,10 +88,11 @@ export function Title({ records, onPlay, onRecords, onGuide, onLang }: { records
   );
 }
 
-export function Select({ records, onPick, onBack }: { records: Records; onPick: (h: HeroDef) => void; onBack: () => void }) {
+export function Select({ records, training = false, onPick, onBack }: { records: Records; training?: boolean; onPick: (h: HeroDef) => void; onBack: () => void }) {
   return (
     <div className="screen">
-      <h2>{tr('Kuka laskeutuu?', 'Who goes down?')}</h2>
+      <h2>{training ? tr('Kuka harjoittelee?', 'Who trains?') : tr('Kuka laskeutuu?', 'Who goes down?')}</h2>
+      {training && <p className="small">{tr('Nuket eivät ammu eivätkä liiku. Aseita putoilee kokeiltavaksi. Ei kuolemaa, ei tulosta.', 'The dummies do not shoot or move. Guns drop for you to try. No death, no score.')}</p>}
       <div className="heroes">
         {HEROES.map((d) => (
           <button key={d.id} className="hero" onClick={() => onPick(d)}>

@@ -17,6 +17,7 @@
 #   make ui-shots      # the slots at several gun levels, the pickup card and each hero's super aim, portrait and landscape, into shots/ui/
 #   make thrown-shots  # each thrown gun landing and its pool, into shots/thrown/
 #   make boss-shots    # every boss mid-fight, into shots/bosses/
+#   make guide-shots   # the how-to-play guide and the training ground, portrait and landscape, into shots/guide/
 #   make touch-check   # taps through the menus on an emulated phone
 #   make pickup-check  # a gun pickup on an emulated iPhone: the card slides in and flies to its slot without a jump
 #   make super-check   # each hero's super, tapped in a fight on an emulated iPhone, hits
@@ -34,7 +35,7 @@ PROF     = $(if $(PROFILE),AWS_PROFILE=$(PROFILE) ,)
 AWS      = $(PROF)aws
 TF       = $(PROF)terraform -chdir=infra
 
-.PHONY: env board-check pause-check touch-check ui-shots thrown-shots boss-shots super-check pickup-check supers deaths gauntlet gauntlet-check dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
+.PHONY: env board-check pause-check touch-check ui-shots thrown-shots boss-shots guide-shots super-check pickup-check supers deaths gauntlet gauntlet-check dev build preview check balance shots-setup shots shots-en plan apply outputs deploy-pixel
 
 dev:
 	npm run dev
@@ -108,6 +109,9 @@ thrown-shots:
 
 boss-shots:
 	node scripts/boss-shots.mjs
+
+guide-shots:
+	node scripts/guide-shots.mjs
 
 plan:
 	$(TF) init

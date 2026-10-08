@@ -87,6 +87,22 @@ try {
   const floor = await page.evaluate(() => window.__sim.floor);
   check(floor === 2 && (await page.locator('.overlay').count()) === 0, 'a tap on a cog card on the lift starts floor 2');
 
+  // The guide and the training ground: their buttons take a tap, and
+  // End practice comes straight back to the title.
+  await page.goto(`http://localhost:${port}/?lang=en&seed=1`);
+  await page.getByRole('button', { name: 'How to play' }).tap();
+  await page.waitForTimeout(300);
+  check((await page.locator('.guide .gcard').count()) >= 8, 'a tap on How to play opens the guide');
+  await page.getByRole('button', { name: 'Back' }).tap();
+  await page.getByRole('button', { name: 'Training ground' }).tap();
+  await page.getByRole('button', { name: /The Sweep/ }).tap();
+  await page.waitForFunction(() => window.__sim && window.__sim.training && window.__sim.enemies.length >= 5, null, { timeout: 15000 });
+  await page.waitForTimeout(300);
+  check((await page.locator('.floor .train').count()) === 1, 'the training ground says Training in the HUD');
+  await page.locator('.endtrain').tap();
+  await page.waitForTimeout(300);
+  check((await page.locator('.logo').count()) === 1, 'a tap on End practice returns to the title');
+
   // Landscape: every menu taller than the screen scrolls under a finger,
   // and its last button can then be reached and tapped.
   const land = await (await browser.newContext({ ...devices['iPhone 15 landscape'], hasTouch: true })).newPage();

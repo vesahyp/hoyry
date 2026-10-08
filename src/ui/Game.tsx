@@ -16,6 +16,7 @@ import { audio } from '../audio';
 import { Rng } from '../game/rng';
 import { botInput, botPickCog, humanPickCog, BOT, HUMAN } from '../../tools/autoplayer';
 import { practiceRun } from '../../tools/build';
+import { trainingRun } from '../game/training';
 import { track } from '../records';
 import { t, tr, num } from '../i18n';
 import { CogCard, GunCard, Level } from './Cards';
@@ -49,6 +50,7 @@ interface Hud {
   near: Gun | null;
   enemies: number;
   phase: SimState['phase'];
+  training: boolean;
 }
 
 type Overlay = { kind: 'none' } | { kind: 'cogs'; offers: CogDef[]; left: number } | { kind: 'pause' } | { kind: 'guide' };
@@ -68,7 +70,7 @@ function ConfirmButton({ className, label, sure, onConfirm }: { className: strin
   );
 }
 
-export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroDef[]; seed: number; onEnd: (r: RunSummary) => void; onQuit: () => void; onRestart: () => void }) {
+export function Game({ heroes, seed, training = false, onEnd, onQuit, onRestart }: { heroes: HeroDef[]; seed: number; training?: boolean; onEnd: (r: RunSummary) => void; onQuit: () => void; onRestart: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const superRef = useRef<HTMLDivElement>(null);
@@ -95,7 +97,8 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
     // first. Such a run is practice: it goes on no leaderboard.
     const asked = Number(new URLSearchParams(location.search).get('floor'));
     const practice = Number.isInteger(asked) && asked >= 2 && asked <= 40 ? asked : 0;
-    const s = practice ? practiceRun(seed, heroes, asked) : newRun(seed, heroes);
+    // The training ground (training.ts): a room of dummies, no waves, no death, no record.
+    const s = training ? trainingRun(seed, heroes) : practice ? practiceRun(seed, heroes, asked) : newRun(seed, heroes);
     simRef.current = s;
     (window as unknown as { __sim: SimState }).__sim = s;
     // For the Playwright scripts: put a rolled gun of `type` in the active hand.
@@ -108,7 +111,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
     const input = new InputController();
     input.attach(root);
     inputRef.current = input;
-    track('run_start', { hero: heroes.map((h) => h.id).join('+'), seed, practice });
+    track('run_start', { hero: heroes.map((h) => h.id).join('+'), seed, practice, training });
     audio.unlock();
     audio.startMusic();
 
@@ -151,6 +154,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
         hero: heroes.map((x) => x.id).join('+'),
         how,
         practice,
+        training,
         floor: s.floor,
         time: Math.round(s.time),
         kills: s.run.kills,
@@ -182,6 +186,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
         near,
         enemies: s.enemies.length + s.marks.length,
         phase: s.phase,
+        training: s.training !== null,
       });
     };
 
@@ -336,13 +341,24 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
       {hud && (
         <div className="hud">
           <div className="hudtop">
-            <div className="floor">
-              {tr('Kerros', 'Floor')} <b>{hud.floor}</b>
-            </div>
+            {hud.training ? (
+              <div className="floor">
+                <b className="train">{tr('Harjoitus', 'Training')}</b>
+              </div>
+            ) : (
+              <div className="floor">
+                {tr('Kerros', 'Floor')} <b>{hud.floor}</b>
+              </div>
+            )}
             <div className="counts">
               <span className="coins">⚙ {num(hud.coins)}</span>
               <span className="kills">☠ {num(hud.kills)}</span>
-              {hud.phase === 'fight' && hud.enemies > 0 && (
+              {hud.training && (
+                <button className="endtrain" data-ui onClick={onQuit}>
+                  {tr('Lopeta harjoitus', 'End practice')}
+                </button>
+              )}
+              {!hud.training && hud.phase === 'fight' && hud.enemies > 0 && (
                 <span className={`left ${hud.enemies <= 3 ? 'urgent' : ''}`}>{tr(`${hud.enemies} jäljellä`, `${hud.enemies} left`)}</span>
               )}
             </div>
@@ -492,8 +508,16 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
             <button className="btn primary" onClick={() => setOverlay({ kind: 'none' })}>
               {tr('Jatka', 'Resume')}
             </button>
-            <ConfirmButton className="btn" label={tr('Alusta', 'Restart')} sure={tr('Alusta varmasti?', 'Really restart?')} onConfirm={onRestart} />
-            <ConfirmButton className="btn ghost" label={tr('Lopeta', 'Quit')} sure={tr('Lopeta varmasti?', 'Really quit?')} onConfirm={onQuit} />
+            {s?.training ? (
+              <button className="btn" onClick={onQuit}>
+                {tr('Takaisin valikkoon', 'Back to the menu')}
+              </button>
+            ) : (
+              <>
+                <ConfirmButton className="btn" label={tr('Alusta', 'Restart')} sure={tr('Alusta varmasti?', 'Really restart?')} onConfirm={onRestart} />
+                <ConfirmButton className="btn ghost" label={tr('Lopeta', 'Quit')} sure={tr('Lopeta varmasti?', 'Really quit?')} onConfirm={onQuit} />
+              </>
+            )}
           </div>
           <button className="btn ghost" onClick={() => setOverlay({ kind: 'guide' })}>
             {tr('Näin pelataan', 'How to play')}
