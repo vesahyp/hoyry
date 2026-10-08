@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import type { HeroDef } from './game/content/heroes';
 import { Game, type RunSummary } from './ui/Game';
 import { Title, Select, Death, RecordsScreen } from './ui/Screens';
+import { GuideScreen } from './ui/Guide';
 import { loadRecords, saveRun, type Records } from './records';
 import { UpdateBanner } from './ui/Update';
 import { ErrorBoundary } from './ui/ErrorBoundary';
 import { BUILD, BUILD_NAME } from './version';
 import { lang, setLang, t } from './i18n';
 
-type Screen = { kind: 'title' } | { kind: 'select' } | { kind: 'records' } | { kind: 'run'; hero: HeroDef; seed: number } | { kind: 'dead'; r: RunSummary; rank: number; heroBest: boolean };
+type Screen = { kind: 'title' } | { kind: 'select' } | { kind: 'records' } | { kind: 'guide' } | { kind: 'run'; hero: HeroDef; seed: number } | { kind: 'dead'; r: RunSummary; rank: number; heroBest: boolean };
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ function Screens() {
           records={records}
           onPlay={() => setScreen({ kind: 'select' })}
           onRecords={() => setScreen({ kind: 'records' })}
+          onGuide={() => setScreen({ kind: 'guide' })}
           onLang={(l) => {
             setLang(l);
             setLangState(l);
@@ -51,6 +53,9 @@ function Screens() {
       break;
     case 'records':
       body = <RecordsScreen records={records} onBack={() => setScreen({ kind: 'title' })} />;
+      break;
+    case 'guide':
+      body = <GuideScreen onBack={() => setScreen({ kind: 'title' })} />;
       break;
     case 'run':
       body = (

@@ -20,6 +20,7 @@ import { track } from '../records';
 import { t, tr, num } from '../i18n';
 import { CogCard, GunCard, Level } from './Cards';
 import { UpdateBanner } from './Update';
+import { GuideBody } from './Guide';
 
 export interface RunSummary {
   hero: HeroDef;
@@ -50,7 +51,7 @@ interface Hud {
   phase: SimState['phase'];
 }
 
-type Overlay = { kind: 'none' } | { kind: 'cogs'; offers: CogDef[]; left: number } | { kind: 'pause' };
+type Overlay = { kind: 'none' } | { kind: 'cogs'; offers: CogDef[]; left: number } | { kind: 'pause' } | { kind: 'guide' };
 
 /** A button that throws the run away: the first tap arms it, a second tap within a few seconds does it. */
 function ConfirmButton({ className, label, sure, onConfirm }: { className: string; label: string; sure: string; onConfirm: () => void }) {
@@ -206,7 +207,7 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
       const pk = input.pressed('escape') || input.pressed('p');
       if (pk && !pauseKey) {
         if (ov.kind === 'none') setOverlay({ kind: 'pause' });
-        else if (ov.kind === 'pause') setOverlay({ kind: 'none' });
+        else if (ov.kind === 'pause' || ov.kind === 'guide') setOverlay({ kind: 'none' });
       }
       pauseKey = pk;
       const t0 = performance.now();
@@ -494,12 +495,18 @@ export function Game({ heroes, seed, onEnd, onQuit, onRestart }: { heroes: HeroD
             <ConfirmButton className="btn" label={tr('Alusta', 'Restart')} sure={tr('Alusta varmasti?', 'Really restart?')} onConfirm={onRestart} />
             <ConfirmButton className="btn ghost" label={tr('Lopeta', 'Quit')} sure={tr('Lopeta varmasti?', 'Really quit?')} onConfirm={onQuit} />
           </div>
-          <p className="help">
-            {tr(
-              'Vasen peukalo kävelee. Oikea peukalo: napauta niin ase ampuu lähintä, vedä niin näet suunnan ja ammut kun nostat. Tähti on supervoima: se latautuu osumista, ja napautus tähtää sen itse. ⇄ tähden vieressä vaihtaa asetta. Näppäimistöllä WASD, hiiri tähtää ja ampuu, välilyönti on supervoima, Q, hiiren rulla tai 1 ja 2 vaihtavat asetta, E ottaa aseen maasta.',
-              'Left thumb walks. Right thumb: tap and the gun fires at the nearest enemy, drag to see the line and fire when you lift. The star is your super: hits charge it, and a tap aims it for you. The ⇄ beside it swaps guns. On a keyboard WASD walks, the mouse aims and fires, space is the super, Q, the scroll wheel or 1 and 2 swap guns, E takes a gun from the floor.',
-            )}
-          </p>
+          <button className="btn ghost" onClick={() => setOverlay({ kind: 'guide' })}>
+            {tr('Näin pelataan', 'How to play')}
+          </button>
+        </div>
+      )}
+      {overlay.kind === 'guide' && (
+        <div className="overlay" data-ui>
+          <h2>{tr('Näin pelataan', 'How to play')}</h2>
+          <GuideBody />
+          <button className="btn primary" onClick={() => setOverlay({ kind: 'pause' })}>
+            {tr('Takaisin', 'Back')}
+          </button>
         </div>
       )}
       {overlay.kind === 'none' && <UpdateBanner />}

@@ -12,6 +12,9 @@ game follows your browser's language.*
 
 ## Miten pelataan
 
+Alkuvalikon **Näin pelataan** piirtää jokaisen napin ja kertoo mitä se tekee.
+Sama ohje aukeaa taukovalikosta kesken pelin.
+
 **Puhelimella:** vasen peukalo kävelee. Oikealla peukalolla napautus ampuu
 lähintä näkyvää vihollista, veto näyttää tähtäysviivan ja laukaisee kun
 nostat sormen. Tähtinappi oikeassa reunassa on supervoima: se täyttyy
@@ -168,6 +171,9 @@ your way down through the works, floor by floor, taking the gun each enemy
 shot you with.
 
 **Play: https://vesahyp.github.io/hoyry/**
+
+**How to play** on the title screen draws every button and says what it
+does. The same guide opens from the pause menu mid-run.
 
 **Touch:** left thumb walks. Right thumb: tap fires at the nearest enemy you
 can see, drag shows an aim line and fires on release. The star button on

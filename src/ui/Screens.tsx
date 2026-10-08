@@ -37,7 +37,7 @@ function HeroPortrait({ d, size = 72 }: { d: HeroDef; size?: number }) {
   return <canvas ref={ref} style={{ width: size, height: size }} />;
 }
 
-export function Title({ records, onPlay, onRecords, onLang }: { records: Records; onPlay: () => void; onRecords: () => void; onLang: (l: Lang) => void }) {
+export function Title({ records, onPlay, onRecords, onGuide, onLang }: { records: Records; onPlay: () => void; onRecords: () => void; onGuide: () => void; onLang: (l: Lang) => void }) {
   return (
     <div className="screen title">
       <div className="cogs" aria-hidden>
@@ -62,6 +62,9 @@ export function Title({ records, onPlay, onRecords, onLang }: { records: Records
           {RECORDS_ON ? tr('Tulostaulu', 'Leaderboard') : tr('Ennätykset', 'Records')}
         </button>
       )}
+      <button className="btn" onClick={onGuide}>
+        {tr('Näin pelataan', 'How to play')}
+      </button>
       {records.deepest > 0 && <p className="small">{tr(`Syvin kerros: ${records.deepest}`, `Deepest floor: ${records.deepest}`)}</p>}
       <div className="row">
         <button className="btn ghost" onClick={() => onLang(lang() === 'fi' ? 'en' : 'fi')}>
