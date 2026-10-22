@@ -5,6 +5,12 @@ The design is in `docs/design.md`.
 
 ## Next
 
+- Loot popups get in the way (Vesa, 2026-10-22, the same on Hiisi). Port
+  Hiisi's rule: a plainly better gun is taken on the walk with a log
+  line, anything else shows as a chip under the slots, the card opens on
+  a tap. The rule, the chip and the Playwright proof are written up in
+  `../hiisi/docs/loot-ui.md`.
+
 - Keep playtesting by hand on a phone (`?floor=N` skips to the floor in
   question). The first playtest found floors 6 to 8 unfair; the gauntlet
   (`make gauntlet`) now guards them. Tune what feels wrong with
